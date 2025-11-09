@@ -1,5 +1,8 @@
+from melon.config import Config
+
+
 class Store:
-    token = None
+    token = Config.token
 
 
 store = Store()

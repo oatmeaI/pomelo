@@ -14,10 +14,13 @@ HIJACK = "hijack"
 STATION_KEY = "explore"
 DEFAULT_CONFIG = {"station_name": "Explore Radio"}
 
+def probably(chance):
+    return random.random() < chance
 
 class Plugin:
     _server = None
     queues = {}
+    tracksByQueue = {}
     inflight = False
     favorites = 1
 
@@ -59,10 +62,16 @@ class Plugin:
 
     def playQueues(self, path, request, response):
         queueId = str(self.getQueueIdForRequest(request))
+        print("checking queue", queueId, path, self.inflight)
         if queueId in path and not self.inflight:
             print("checking if we should add to queue")
             self.inflight = True
-            self.handleQueue(request)
+            try:
+                self.handleQueue(request)
+            except Exception as e:
+                print(e)
+                self.inflight = False
+                raise e
             self.inflight = False
             # refresh the response since we changed the queue
             return forwardRequest(request, path)
@@ -75,7 +84,8 @@ class Plugin:
             and STATION_KEY in request.args[constants.URI_KEY]
             and HIJACK in request.args[constants.URI_KEY]
         ):
-            print("Starting station...")
+            print("Starting cool station...")
+            print(store.token)
             section = self.server().library.section(Config.musicSection)
 
             # TODO: pick this in a smarter way
@@ -83,11 +93,12 @@ class Plugin:
             tracks = [firstTrack]
             server = self.server()
             queue = PlayQueue.create(server, tracks)
+            self.tracksByQueue[queue.playQueueID] = tracks
 
             prevTrack = firstTrack
             while len(queue.items) < 3:
-                prevTrack = self.getNextTrack(server, prevTrack, queue.items)
-                queue.addItem(prevTrack)
+                prevTrack = self.getNextTrack(server, prevTrack, queue)
+                self.addTrackToQueue(queue, prevTrack)
 
             deviceId = request.args[constants.DEVICE_NAME_KEY]
             self.setQueueIdForDevice(deviceId, queue.playQueueID)
@@ -97,18 +108,23 @@ class Plugin:
         return response
 
     def handleQueue(self, request):
+        print("adding cool track")
         server = self.server()
         queueId = self.getQueueIdForRequest(request)
         queue = PlayQueue.get(server, queueId)
-        queue.refresh()
-        pos = len(queue.items) - queue.playQueueSelectedItemOffset
+        pos = (
+            len(self.tracksByQueue[queueId]) - queue.playQueueSelectedItemOffset
+        )
         print("pos", pos)
         while pos < 15:
             print("pos", pos)
-            track = queue.items[-1]
-            nextTrack = self.getNextTrack(server, track, queue.items)
-            queue.addItem(nextTrack)
-            pos = len(queue.items) - queue.playQueueSelectedItemOffset
+            track = self.tracksByQueue[queueId][-1]
+            nextTrack = self.getNextTrack(server, track, queue)
+            self.addTrackToQueue(queue, nextTrack)
+            pos = (
+                len(self.tracksByQueue[queueId])
+                - queue.playQueueSelectedItemOffset
+            )
 
     # TODO: from here down is a real mess
     def addStation(self, name, key, response):
@@ -129,28 +145,41 @@ class Plugin:
         except Exception as e:
             bail()
 
+    def addTrackToQueue(self, queue, track):
+        self.tracksByQueue[queue.playQueueID].append(track)
+        queue.addItem(track)
+
     def getNextTrack(self, server, track, queue):
-        tracks = track.sonicallySimilar(maxDistance=0.2)
+        tracks = track.sonicallySimilar(maxDistance=0.4)
         # make an unheard song more likely the more favorites in a row
         rand = random.randint(0, self.favorites)
-        print(rand, self.favorites)
-        unheard = rand < self.favorites
+        print(queue)
+        queueItems = self.tracksByQueue[queue.playQueueID]
+        unheard = True if self.favorites else probably(50/100) 
+        # unheard = probably(50/100) 
+       
+        # unheard = rand < self.favorites
+       
         if not unheard:
-            self.favorites = self.favorites + 1
+            self.favorites = True
         else:
-            self.favorites = 1
+            self.favorites = False
+
         type = "unheard" if unheard else "favorited"
         # TODO: super dumb
+
+        lastThreeAlbums = [track.grandparentTitle for track in queueItems[-3:]]
+        print(lastThreeAlbums)
+
         filtered = list(
             filter(
-                lambda t: t not in queue
+                lambda t: t not in queueItems
                 and (
                     t.viewCount < 1
                     if unheard
                     else t.userRating is not None and t.userRating > 0
                 )
-                and queue[-1].parentTitle
-                != t.parentTitle,  # don't add two tracks from the same album back to back
+                and t.grandparentTitle not in lastThreeAlbums, # Avoid adding two tracks by the same artist in three songs
                 tracks,
             )
         )
@@ -160,14 +189,13 @@ class Plugin:
             type = "fell thru to unheard" if unheard else "fell thru to favorited"
             filtered = list(
                 filter(
-                    lambda t: t not in queue
+                    lambda t: t not in queueItems
                     and (
                         t.viewCount < 1
                         if unheard
                         else t.userRating is not None and t.userRating > 0
                     )
-                    and queue[-1].parentTitle
-                    != t.parentTitle,  # don't add two tracks from the same album back to back
+                    and t.grandparentTitle not in lastThreeAlbums, # Avoid adding two tracks by the same artist in three songs
                     tracks,
                 )
             )

@@ -1,1 +1,1 @@
-plugins = ["DiscoveryRadio"]
+plugins = ["DiscoveryRadio", "SmartShuffle"]

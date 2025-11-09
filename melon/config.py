@@ -8,9 +8,10 @@ DEFAULTS = {
     "serverPort": "32400",
     "musicSection": "Music",
     "debug": False,
-    "enabled_plugins": ["ExploreRadio", "BetterTrackRadio"],
+    "enabled_plugins": ["ExploreRadio", "BetterTrackRadio", "SmartShuffle"],
     "port": 5200,
     "plugin_config": {},
+    "token": None,
 }
 
 
@@ -18,6 +19,8 @@ class _Config:
     def __init__(self):
         config_dir = user_config_dir(APP_NAME, ensure_exists=True)
         config_file_path = f"{config_dir}/{CONFIG_FILE_NAME}"
+
+        print(config_file_path)
 
         if os.path.exists(config_file_path):
             with open(config_file_path, "rb") as f:
@@ -32,6 +35,7 @@ class _Config:
         self.enabled_plugins = self.loadSetting("enabled_plugins")
         self.port = self.loadSetting("port")
         self.pluginConfig = self.loadSetting("plugin_config")
+        self.token = self.loadSetting("token")
 
     def getPluginSettins(self, pluginName):
         if pluginName in self.pluginConfig:

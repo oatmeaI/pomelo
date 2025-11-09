@@ -33,19 +33,23 @@ def catch_all(path):
         if path in plugin.paths(request):
             handlers.append(plugin.paths(request)[path])
 
+    print("\n----------------------")
+    print("path", path)
     if len(handlers) == 0:
+        print("bailing because no handlers")
         bail()
         return
 
+    print("handlers", handlers)
     response = forwardRequest(request, path)
     interceptedResponse = response
 
-    print(handlers)
 
     for handler in handlers:
-        print(handler)
+        print("running", handler)
         interceptedResponse = handler(path, request, interceptedResponse)
 
+    print("sending response")
     return buildResponse(interceptedResponse)
 
 
