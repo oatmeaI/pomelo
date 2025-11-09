@@ -4,7 +4,6 @@ import logging
 import importlib
 
 from melon.constants import PLUGIN_NAMESPACE, TOKEN_KEY
-from melon.logging import logRequest
 from melon.store import store
 from melon.config import Config
 from melon.util import bail, buildResponse, forwardRequest
@@ -23,9 +22,7 @@ for plugin_name in Config.enabled_plugins:
 @app.route("/<path:path>", methods=["POST", "GET", "PUT", "PATCH", "DELETE"])
 def catch_all(path):
     if store.token is None and TOKEN_KEY in request.args:
-        store.token = request.args[TOKEN_KEY]
-
-    logRequest(path, request)
+        store.setToken(request.args[TOKEN_KEY])
 
     handlers = []
 
@@ -33,23 +30,15 @@ def catch_all(path):
         if path in plugin.paths(request):
             handlers.append(plugin.paths(request)[path])
 
-    print("\n----------------------")
-    print("path", path)
     if len(handlers) == 0:
-        print("bailing because no handlers")
-        bail()
-        return
+        return bail(request, path)
 
-    print("handlers", handlers)
     response = forwardRequest(request, path)
     interceptedResponse = response
 
-
     for handler in handlers:
-        print("running", handler)
         interceptedResponse = handler(path, request, interceptedResponse)
 
-    print("sending response")
     return buildResponse(interceptedResponse)
 
 

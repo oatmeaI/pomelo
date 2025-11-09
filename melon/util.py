@@ -12,8 +12,8 @@ def buildResponse(response):
 
 
 # Just a wrapper with a better name
-def bail():
-    abort(404)
+def bail(request, path):
+    return buildResponse(forwardRequest(request, path))
 
 
 def requestToServer(endpoint, headers):

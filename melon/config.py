@@ -1,4 +1,5 @@
 import tomllib
+import tomli_w
 import os
 from platformdirs import user_config_dir
 from melon.constants import APP_NAME, CONFIG_FILE_NAME
@@ -17,13 +18,11 @@ DEFAULTS = {
 
 class _Config:
     def __init__(self):
-        config_dir = user_config_dir(APP_NAME, ensure_exists=True)
-        config_file_path = f"{config_dir}/{CONFIG_FILE_NAME}"
+        self.config_dir = user_config_dir(APP_NAME, ensure_exists=True)
+        self.config_file_path = f"{self.config_dir}/{CONFIG_FILE_NAME}"
 
-        print(config_file_path)
-
-        if os.path.exists(config_file_path):
-            with open(config_file_path, "rb") as f:
+        if os.path.exists(self.config_file_path):
+            with open(self.config_file_path, "rb") as f:
                 self.data = tomllib.load(f)
         else:
             self.data = DEFAULTS
@@ -44,6 +43,13 @@ class _Config:
 
     def loadSetting(self, setting):
         return self.data[setting] if setting in self.data else DEFAULTS[setting]
+
+    def writeSetting(self, setting, value):
+        self.data[setting] = value
+
+        if os.path.exists(self.config_file_path):
+            with open(self.config_file_path, "wb") as f:
+                tomli_w.dump(self.data, f)
 
 
 Config = _Config()

@@ -13,6 +13,7 @@ PLUGIN_NAME = "AnyRadios"
 HIJACK = "hijack"
 FILTERS = {"recentlyFaved": {"track.lastRatedAt>>": "-30d", "track.userRating>>": 1}}
 DEFAULT_CONFIG = {
+    "length": 50,
     "stations": [
         {
             "station_name": "test station",
@@ -127,7 +128,7 @@ DEFAULT_CONFIG = {
                 {"name": "random", "filters": {}, "chance": 0.08},
             ],
         },
-    ]
+    ],
 }
 
 # TODO: create a "sonicallySimilar" source
@@ -138,16 +139,6 @@ def pick(sources):
     weights = [s["chance"] for s in sources]
     source = choices(sources, weights=weights)[0]
     return source
-    # print(idx)
-    # return sources[idx]
-    number = random.random()
-    source = next(
-        filter(
-            lambda s: number < ((s["chance"] if "chance" in s else 100) / 100), sources
-        )
-    )
-    return source
-    # return random.random() < chance
 
 
 class Plugin:
@@ -238,7 +229,6 @@ class Plugin:
             bail()
 
     def startStation(self, path, request, response):
-        # TODO: instead of try/except, detect the case correctly
         try:
             if (
                 constants.URI_KEY not in request.args
@@ -250,12 +240,9 @@ class Plugin:
                 if station["key"] not in request.args[constants.URI_KEY]:
                     continue
 
-                print("starting radio", station["station_name"])
                 self.totals = {}
 
-                ######### NEW CODE #########
-                LENGTH = 50
-
+                length = self.config["length"]
                 sources = station["sources"]
                 section = self.server().library.section(Config.musicSection)
 
@@ -270,29 +257,18 @@ class Plugin:
                     aux_weight = aux_weight_start
                     filters = source["filters"]
                     tracks = section.searchTracks(
-                        maxresults=LENGTH, sort=sort, filters=filters
+                        maxresults=length, sort=sort, filters=filters
                     )
                     for track in tracks:
                         pool.append(track)
                         weights.append(source["chance"] + aux_weight)
                         aux_weight += aux_weight_start
 
-                tracks = list(set(choices(pool, weights=weights, k=LENGTH)))
-                ######### END NEW CODE #########
-
-                # track = self.getNextTrack(station)
-                # tracks = [track]
+                tracks = list(set(choices(pool, weights=weights, k=length)))
 
                 server = self.server()
                 queue = PlayQueue.create(server, tracks)
                 self.tracksByQueue[queue.playQueueID] = tracks
-
-                # prevTrack = track
-
-                # while len(self.tracksByQueue[queue.playQueueID]) < 2:
-                #     print("adding starter track")
-                #     prevTrack = self.getNextTrack(station)
-                #     self.addTrackToQueue(queue, prevTrack)
 
                 deviceId = request.args[constants.DEVICE_NAME_KEY]
                 self.setQueueIdForDevice(deviceId, queue.playQueueID)
@@ -313,7 +289,6 @@ class Plugin:
         filters = source["filters"]
         sort = source["sort"] if "sort" in source else "random"
         track = section.searchTracks(maxresults=1, sort=sort, filters=filters)[0]
-        print("---->\t\t\t•", source["name"], "\t===>\t", track.title)
 
         name = source["name"]
         if name not in self.totals:
@@ -324,10 +299,8 @@ class Plugin:
 
     def handleQueue(self, path, request, response):
         queueId = str(self.getQueueIdForRequest(request))
-        print(queueId, path)
         if queueId in path and not self.inflight:
             try:
-                print("checking if we should add to queue")
                 self.inflight = True
                 server = self.server()
                 queueId = self.getQueueIdForRequest(request)
@@ -349,7 +322,6 @@ class Plugin:
                 raise e
             self.inflight = False
             # refresh the response since we changed the queue
-            print(self.totals)
             return response
             return forwardRequest(request, path)
         return response
