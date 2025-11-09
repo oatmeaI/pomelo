@@ -179,15 +179,13 @@ class Plugin:
 
     def paths(self, request):
         queueId = self.getQueueIdForRequest(request)
-        # print(request)
         return {
             "hubs/sections/1": self.addStations,
             "playQueues": self.startStation,
             f"playQueues/{str(queueId)}": self.handleQueue,
         }
 
-    def addStations(self, _, __, response):
-        print("Adding stations...")
+    def addStations(self, path, request, response):
         try:
             stations = self.config["stations"]
             j = json.loads(response.content)
@@ -220,13 +218,12 @@ class Plugin:
                         )
 
                         hub["Metadata"].insert(0, first)
-                        print("Adding station to mixes hub")
 
             response._content = json.dumps(j)
             return response
         except Exception as e:
             print(e)
-            bail()
+            bail(path, request)
 
     def startStation(self, path, request, response):
         try:

@@ -1,4 +1,4 @@
-APP_NAME = "melon"
+APP_NAME = "pomelo"
 
 CONFIG_FILE_NAME = "config.toml"
 

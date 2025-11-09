@@ -43,14 +43,10 @@ def catch_all(path):
 
 
 def start():
-    if Config.debug:
-        start_dev()
-    else:
-        serve(app, listen=f"*:{Config.port}")
+    serve(app, listen=f"*:{Config.port}")
 
 
 def start_dev():
-    Config.debug = True
     log = logging.getLogger("werkzeug")
     log.setLevel(logging.ERROR)
     app.run(port=Config.port, debug=True)

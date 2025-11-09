@@ -14,8 +14,10 @@ HIJACK = "hijack"
 STATION_KEY = "explore"
 DEFAULT_CONFIG = {"station_name": "Explore Radio"}
 
+
 def probably(chance):
     return random.random() < chance
+
 
 class Plugin:
     _server = None
@@ -56,9 +58,11 @@ class Plugin:
             f"playQueues/{str(queueId)}": self.playQueues,
         }
 
-    def addExploreStation(self, _, __, response):
+    def addExploreStation(self, path, request, response):
         print("Adding station...")
-        return self.addStation(self.config["station_name"], STATION_KEY, response)
+        return self.addStation(
+            self.config["station_name"], STATION_KEY, path, request, response
+        )
 
     def playQueues(self, path, request, response):
         queueId = str(self.getQueueIdForRequest(request))
@@ -112,22 +116,17 @@ class Plugin:
         server = self.server()
         queueId = self.getQueueIdForRequest(request)
         queue = PlayQueue.get(server, queueId)
-        pos = (
-            len(self.tracksByQueue[queueId]) - queue.playQueueSelectedItemOffset
-        )
+        pos = len(self.tracksByQueue[queueId]) - queue.playQueueSelectedItemOffset
         print("pos", pos)
         while pos < 15:
             print("pos", pos)
             track = self.tracksByQueue[queueId][-1]
             nextTrack = self.getNextTrack(server, track, queue)
             self.addTrackToQueue(queue, nextTrack)
-            pos = (
-                len(self.tracksByQueue[queueId])
-                - queue.playQueueSelectedItemOffset
-            )
+            pos = len(self.tracksByQueue[queueId]) - queue.playQueueSelectedItemOffset
 
     # TODO: from here down is a real mess
-    def addStation(self, name, key, response):
+    def addStation(self, name, key, path, request, response):
         try:
             j = json.loads(response.content)
             for hub in j["MediaContainer"]["Hub"]:
@@ -143,7 +142,7 @@ class Plugin:
             response._content = json.dumps(j)
             return response
         except Exception as e:
-            bail()
+            bail(request, path)
 
     def addTrackToQueue(self, queue, track):
         self.tracksByQueue[queue.playQueueID].append(track)
@@ -155,11 +154,8 @@ class Plugin:
         rand = random.randint(0, self.favorites)
         print(queue)
         queueItems = self.tracksByQueue[queue.playQueueID]
-        unheard = True if self.favorites else probably(50/100) 
-        # unheard = probably(50/100) 
-       
-        # unheard = rand < self.favorites
-       
+        unheard = True if self.favorites else probably(50 / 100)
+
         if not unheard:
             self.favorites = True
         else:
@@ -179,7 +175,8 @@ class Plugin:
                     if unheard
                     else t.userRating is not None and t.userRating > 0
                 )
-                and t.grandparentTitle not in lastThreeAlbums, # Avoid adding two tracks by the same artist in three songs
+                and t.grandparentTitle
+                not in lastThreeAlbums,  # Avoid adding two tracks by the same artist in three songs
                 tracks,
             )
         )
@@ -195,7 +192,8 @@ class Plugin:
                         if unheard
                         else t.userRating is not None and t.userRating > 0
                     )
-                    and t.grandparentTitle not in lastThreeAlbums, # Avoid adding two tracks by the same artist in three songs
+                    and t.grandparentTitle
+                    not in lastThreeAlbums,  # Avoid adding two tracks by the same artist in three songs
                     tracks,
                 )
             )

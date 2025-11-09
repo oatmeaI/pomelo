@@ -1,18 +1,20 @@
 import tomllib
 import tomli_w
 import os
+from pathlib import Path
 from platformdirs import user_config_dir
 from melon.constants import APP_NAME, CONFIG_FILE_NAME
 
 DEFAULTS = {
-    "serverAddress": "http://127.0.0.1",
-    "serverPort": "32400",
-    "musicSection": "Music",
-    "debug": False,
-    "enabled_plugins": ["ExploreRadio", "BetterTrackRadio", "SmartShuffle"],
-    "port": 5200,
-    "plugin_config": {},
+    "server_address": "http://127.0.0.1",
+    "server_port": 32400,
     "token": None,
+    "port": 5200,
+    "music_section": "Music",
+    "enabled_plugins": [
+        "ExploreRadio",
+    ],
+    "plugin_config": {},
 }
 
 
@@ -20,6 +22,7 @@ class _Config:
     def __init__(self):
         self.config_dir = user_config_dir(APP_NAME, ensure_exists=True)
         self.config_file_path = f"{self.config_dir}/{CONFIG_FILE_NAME}"
+        Path(self.config_dir).mkdir(parents=True, exist_ok=True)
 
         if os.path.exists(self.config_file_path):
             with open(self.config_file_path, "rb") as f:
@@ -27,10 +30,9 @@ class _Config:
         else:
             self.data = DEFAULTS
 
-        self.serverAddress = self.loadSetting("serverAddress")
-        self.serverPort = self.loadSetting("serverPort")
-        self.musicSection = self.loadSetting("musicSection")
-        self.debug = self.loadSetting("debug")
+        self.serverAddress = self.loadSetting("server_address")
+        self.serverPort = self.loadSetting("server_port")
+        self.musicSection = self.loadSetting("music_section")
         self.enabled_plugins = self.loadSetting("enabled_plugins")
         self.port = self.loadSetting("port")
         self.pluginConfig = self.loadSetting("plugin_config")
@@ -49,6 +51,9 @@ class _Config:
 
         if os.path.exists(self.config_file_path):
             with open(self.config_file_path, "wb") as f:
+                tomli_w.dump(self.data, f)
+        else:
+            with open(self.config_file_path, "xb") as f:
                 tomli_w.dump(self.data, f)
 
 

@@ -11,7 +11,6 @@ def buildResponse(response):
     )
 
 
-# Just a wrapper with a better name
 def bail(request, path):
     return buildResponse(forwardRequest(request, path))
 
