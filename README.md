@@ -1,4 +1,5 @@
 # Pomelo (for Plex) 🐶
+![Static Badge](https://img.shields.io/badge/made_by_hand-not_ai-blue?style=for-the-badge)
 `pomelo` is a tool that allows you to extend the functionality of your Plex server in almost any way imaginable.
 
 ## How?

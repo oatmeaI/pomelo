@@ -27,7 +27,7 @@ class Plugin:
     favorites = 1
 
     def __init__(self):
-        _config = Config.getPluginSettins(PLUGIN_NAME)
+        _config = Config.getPluginSettings(PLUGIN_NAME)
         self.config = _config if _config else DEFAULT_CONFIG
 
     def setQueueIdForDevice(self, device, queueId):
@@ -46,29 +46,27 @@ class Plugin:
     def server(self):
         if self._server is None:
             self._server = PlexServer(
-                f"{Config.serverAddress}:{Config.serverPort}", store.token
+                f"http://{Config.plex_host}:{Config.plex_port}", store.token
             )
         return self._server
 
-    def paths(self, request):
-        queueId = self.getQueueIdForRequest(request)
+    # FIXME:
+    def paths(self):
+        # queueId = self.getQueueIdForRequest(request)
         return {
-            "hubs/sections/1": self.addExploreStation,
-            "playQueues": self.startStation,
-            f"playQueues/{str(queueId)}": self.playQueues,
+            "/hubs/sections/1": self.addExploreStation,
+            "/playQueues": self.startStation,
+            # f"playQueues/{str(queueId)}": self.playQueues,
         }
 
     def addExploreStation(self, path, request, response):
-        print("Adding station...")
         return self.addStation(
             self.config["station_name"], STATION_KEY, path, request, response
         )
 
     def playQueues(self, path, request, response):
         queueId = str(self.getQueueIdForRequest(request))
-        print("checking queue", queueId, path, self.inflight)
         if queueId in path and not self.inflight:
-            print("checking if we should add to queue")
             self.inflight = True
             try:
                 self.handleQueue(request)
@@ -88,9 +86,7 @@ class Plugin:
             and STATION_KEY in request.args[constants.URI_KEY]
             and HIJACK in request.args[constants.URI_KEY]
         ):
-            print("Starting cool station...")
-            print(store.token)
-            section = self.server().library.section(Config.musicSection)
+            section = self.server().library.section(Config.music_section_title)
 
             # TODO: pick this in a smarter way
             firstTrack = section.searchTracks(maxresults=1, sort="random")[0]
@@ -112,14 +108,11 @@ class Plugin:
         return response
 
     def handleQueue(self, request):
-        print("adding cool track")
         server = self.server()
         queueId = self.getQueueIdForRequest(request)
         queue = PlayQueue.get(server, queueId)
         pos = len(self.tracksByQueue[queueId]) - queue.playQueueSelectedItemOffset
-        print("pos", pos)
         while pos < 15:
-            print("pos", pos)
             track = self.tracksByQueue[queueId][-1]
             nextTrack = self.getNextTrack(server, track, queue)
             self.addTrackToQueue(queue, nextTrack)
@@ -142,7 +135,7 @@ class Plugin:
             response._content = json.dumps(j)
             return response
         except Exception as e:
-            bail(request, path)
+            bail()
 
     def addTrackToQueue(self, queue, track):
         self.tracksByQueue[queue.playQueueID].append(track)
@@ -152,7 +145,6 @@ class Plugin:
         tracks = track.sonicallySimilar(maxDistance=0.4)
         # make an unheard song more likely the more favorites in a row
         rand = random.randint(0, self.favorites)
-        print(queue)
         queueItems = self.tracksByQueue[queue.playQueueID]
         unheard = True if self.favorites else probably(50 / 100)
 
@@ -165,7 +157,6 @@ class Plugin:
         # TODO: super dumb
 
         lastThreeAlbums = [track.grandparentTitle for track in queueItems[-3:]]
-        print(lastThreeAlbums)
 
         filtered = list(
             filter(
@@ -200,8 +191,7 @@ class Plugin:
 
         if len(filtered) < 1:
             type = "fell through to rando"
-            section = server.library.section(Config.musicSection)
+            section = server.library.section(Config.music_section_title)
             filtered = [section.searchTracks(maxresults=1, sort="random")[0]]
 
-        print(type + ": ", filtered[0])
         return filtered[0]

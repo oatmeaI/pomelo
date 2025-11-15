@@ -1,22 +1,50 @@
 import requests
 from flask import abort
+from melon.constants import TOKEN_KEY
+from melon.store import store
 from melon.config import Config
+from plexapi.server import PlexServer
+
+excluded_headers = [
+    "content-encoding",
+    "content-length",
+    "transfer-encoding",
+    "connection",
+    "keep-alive",
+]
 
 
 def buildResponse(response):
+    headers = [
+        (k, v) for k, v in response.headers.items() if k.lower() not in excluded_headers
+    ]
+
     return (
         response.content,
         response.status_code,
-        [("Content-Type", response.headers["Content-Type"])],
+        headers,
     )
 
 
-def bail(request, path):
-    return buildResponse(forwardRequest(request, path))
+def createServer():
+    return PlexServer(f"http://{Config.plex_host}:{Config.plex_port}", store.token)
 
 
-def requestToServer(endpoint, headers):
-    remote_url = f"{Config.serverAddress}:{Config.serverPort}/{endpoint}"
+def bail():
+    return abort(501)
+
+
+def requestToServer(endpoint, _headers):
+    remote_url = f"http://{Config.plex_host}:{Config.plex_port}/{endpoint}"
+
+    # Create a new headers obj since sometimes what we get passed in is immutable
+    headers = {}
+    headers[TOKEN_KEY] = store.token
+    for k, v in _headers.items():
+        if k in excluded_headers:
+            continue
+        headers[k] = v
+
     esreq = requests.Request(
         method="get",
         url=remote_url,
@@ -29,7 +57,7 @@ def requestToServer(endpoint, headers):
 
 def forwardRequest(request, path):
     query_string = request.query_string.decode()
-    remote_url = f"{Config.serverAddress}:{Config.serverPort}/{path}?{query_string}"
+    remote_url = f"http://{Config.plex_host}:{Config.plex_port}/{path}?{query_string}"
     req = requests.Request(
         method=request.method,
         url=remote_url,

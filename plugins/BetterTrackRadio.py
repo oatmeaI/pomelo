@@ -4,14 +4,16 @@ from melon.config import Config
 from melon import constants
 from melon.store import store
 from plexapi.server import PlexServer, PlayQueue
-from melon.util import bail, forwardRequest, requestToServer
+from melon.util import forwardRequest, requestToServer
 
 DEFAULT_CONFIG = {}
 PLUGIN_NAME = "BetterTrackRadio"
 PIVOT_CHANGE = 5  # Higher this is, the less likely you are to get two unheard or two favorites in a row
 
+
 def probably(chance):
     return random.random() < chance
+
 
 class Plugin:
     _server = None
@@ -22,13 +24,13 @@ class Plugin:
     pivot = 10
 
     def __init__(self):
-        _config = Config.getPluginSettins(PLUGIN_NAME)
+        _config = Config.getPluginSettings(PLUGIN_NAME)
         self.config = _config if _config else DEFAULT_CONFIG
 
     def server(self):
         if self._server is None:
             self._server = PlexServer(
-                f"{Config.serverAddress}:{Config.serverPort}", store.token
+                f"http://{Config.plex_host}:{Config.plex_port}", store.token
             )
         return self._server
 
@@ -49,11 +51,12 @@ class Plugin:
         self.tracksByQueue[queue.playQueueID].append(track)
         queue.addItem(track)
 
-    def paths(self, request):
-        queueId = self.getQueueIdForRequest(request)
+    # TODO: fixme
+    def paths(self):
+        # queueId = self.getQueueIdForRequest(request)
         return {
-            "playQueues": self.startStation,
-            f"playQueues/{str(queueId)}": self.handleQueue,
+            "/playQueues": self.startStation,
+            # f"playQueues/{str(queueId)}": self.handleQueue,
         }
 
     def startStation(self, path, request, response):
@@ -95,7 +98,7 @@ class Plugin:
         rand = random.randint(0, 3)
         queueItems = self.tracksByQueue[queue.playQueueID]
         # print(rand, self.pivot)
-        unheard = probably(60/100) 
+        unheard = probably(60 / 100)
         type = "unheard" if unheard else "favorited"
 
         # TODO: super dumb
@@ -132,7 +135,7 @@ class Plugin:
 
         if len(filtered) < 1:
             type = "fell through to rando"
-            section = server.library.section(Config.musicSection)
+            section = server.library.section(Config.music_section_title)
             filtered = [section.searchTracks(maxresults=1, sort="random")[0]]
 
         print(type + ": ", filtered[0])

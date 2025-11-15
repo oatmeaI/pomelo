@@ -1,52 +1,40 @@
 from waitress import serve
-from flask import Flask, request
+from flask import Flask
 import logging
-import importlib
 
-from melon.constants import PLUGIN_NAMESPACE, TOKEN_KEY
-from melon.store import store
+from melon.caddy import init_caddy
 from melon.config import Config
-from melon.util import bail, buildResponse, forwardRequest
+from melon.plugins import init_plugins
+from melon.routes import init_routes
+from melon.wizard import wizard_app, wizard_config, wizard_init
 
 
-app = Flask(__name__)
-plugins = []
-
-print("Enabled plugins: ", Config.enabled_plugins)
-for plugin_name in Config.enabled_plugins:
-    pluginModule = importlib.import_module(f"{PLUGIN_NAMESPACE}.{plugin_name}")
-    plugin = pluginModule.Plugin()
-    plugins.append(plugin)
+def init_app():
+    app = Flask(__name__)
+    return app
 
 
-@app.route("/<path:path>", methods=["POST", "GET", "PUT", "PATCH", "DELETE"])
-def catch_all(path):
-    if store.token is None and TOKEN_KEY in request.args:
-        store.setToken(request.args[TOKEN_KEY])
+def boot():
+    wizard_init()
 
-    handlers = []
+    app = init_app()
+    plugins = init_plugins()
+    init_caddy()
+    init_routes(app, plugins)
 
-    for plugin in plugins:
-        if path in plugin.paths(request):
-            handlers.append(plugin.paths(request)[path])
+    wizard_app()
+    wizard_config()
 
-    if len(handlers) == 0:
-        return bail(request, path)
-
-    response = forwardRequest(request, path)
-    interceptedResponse = response
-
-    for handler in handlers:
-        interceptedResponse = handler(path, request, interceptedResponse)
-
-    return buildResponse(interceptedResponse)
+    return app
 
 
 def start():
-    serve(app, listen=f"*:{Config.port}")
+    app = boot()
+    serve(app, listen=f"*:{Config.pomelo_port}", url_scheme="https")
 
 
 def start_dev():
     log = logging.getLogger("werkzeug")
     log.setLevel(logging.ERROR)
-    app.run(port=Config.port, debug=True)
+    app = boot()
+    app.run(port=Config.pomelo_port, debug=True)
