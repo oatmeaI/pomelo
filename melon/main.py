@@ -2,11 +2,11 @@ from waitress import serve
 from flask import Flask
 import logging
 
-from melon.caddy import init_caddy
 from melon.config import Config
+from melon.caddy import init_caddy
 from melon.plugins import init_plugins
 from melon.routes import init_routes
-from melon.wizard import wizard_app, wizard_config, wizard_init
+from melon.wizard import wizard_app, wizard_proxy, wizard_init
 
 
 def init_app():
@@ -23,7 +23,7 @@ def boot():
     init_routes(app, plugins)
 
     wizard_app()
-    wizard_config()
+    wizard_proxy()
 
     return app
 

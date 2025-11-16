@@ -7,6 +7,10 @@ def wizard_init():
     print("===> Welcome to Pomelo! <===")
 
 
+def wizard_config():
+    print(f"\t ->> Loaded config from {Config.config_file_path}")
+
+
 def wizard_plugins():
     print("\t ->> Enabled plugins: ", Config.enabled_plugins)
 
@@ -21,7 +25,7 @@ def wizard_app():
     print(f"\t ->> Starting Pomelo on port {pomelo_port}")
 
 
-def wizard_config():
+def wizard_proxy():
     proxy_host = Config.proxy_host
     plex_host = Config.plex_host
     plex_port = Config.plex_port

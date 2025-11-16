@@ -57,7 +57,7 @@ class Plugin:
 
     def paths(self):
         return {
-            "/hubs/sections/1": self.addStations,
+            f"/hubs/sections/{Config.music_section_id}": self.addStations,
             "/anyradios": self.returnStations,
             "/playQueues": self.startStation,
         }
@@ -133,7 +133,7 @@ class Plugin:
 
         length = self.config["length"]
         sources = station["sources"]
-        section = self.server().library.section(Config.music_section_title)
+        section = self.server().library.sectionByID(Config.music_section_id)
 
         pool = []
         weights = []

@@ -1,8 +1,14 @@
 import requests
 import subprocess
+import atexit
+import time
 
 from melon.config import Config
 from melon.wizard import wizard_caddy
+
+
+def quit_caddy():
+    subprocess.run(["caddy", "stop"])
 
 
 def init_caddy():
@@ -14,6 +20,8 @@ def init_caddy():
         config = requests.request(method="GET", url=config_url)
     except Exception as e:
         subprocess.run(["caddy", "start"])
+        atexit.register(quit_caddy)
+        time.sleep(2)  # Wait for Caddy to boot
         config = requests.request(method="GET", url=config_url)
 
     jsonConfig = config.json()

@@ -12,9 +12,9 @@ from melon.constants import APP_NAME, CONFIG_FILE_NAME
 DEFAULTS = {
     "plex_host": "127.0.0.1",
     "plex_port": 32400,
-    "plex_token": None,
+    "plex_token": "",
     "pomelo_port": 5200,
-    "music_section_title": "Music",
+    "music_section_id": 1,
     "enabled_plugins": ["ExploreRadio", "AnyRadios"],
     "caddy_url": "http://localhost:2019",
     "proxy_host": ":5500",
@@ -30,7 +30,7 @@ class _Config(FileSystemEventHandler):
         self.loadConfig()
         self.plex_host = self.data["plex_host"]
         self.plex_port = self.data["plex_port"]
-        self.music_section_title = self.data["music_section_title"]
+        self.music_section_id = self.data["music_section_id"]
         self.enabled_plugins = self.data["enabled_plugins"]
         self.caddy_url = self.data["caddy_url"]
 
@@ -38,6 +38,14 @@ class _Config(FileSystemEventHandler):
 
         self.pomelo_port = self.data["pomelo_port"]
         self.plex_token = self.data["plex_token"]
+
+        if self.plex_token == "":
+            # TODO: color / formatting
+            print(
+                f"->> WARN: No plex_token in {self.config_file_path}; initialization will fail."
+            )
+            exit()
+
         observer = Observer()
         observer.schedule(
             self,
@@ -49,9 +57,11 @@ class _Config(FileSystemEventHandler):
         data = {}
         if os.path.exists(self.config_file_path):
             with open(self.config_file_path, "rb") as f:
-                data = tomllib.load(f)
-
-        self.data = DEFAULTS | data
+                self.data = DEFAULTS | tomllib.load(f)
+        else:
+            with open(self.config_file_path, "xb") as f:
+                self.data = DEFAULTS
+                tomli_w.dump(self.data, f)
 
     def on_modified(self, event):
         if event.src_path == self.config_file_path:

@@ -1,6 +1,6 @@
 # MVP
-
 - [ ] Setup instructions + general docs
+- [ ] Get Caddy logs out of output
 - [ ] Docs for AnyRadios
 - [ ] Docs for how sort weighting works in AnyRadios
 - [ ] Early alpha stage disclaimer
