@@ -19,7 +19,8 @@ def init_caddy():
     try:
         config = requests.request(method="GET", url=config_url)
     except Exception as e:
-        subprocess.run(["caddy", "start"])
+        # TODO log to a file instead of dev null
+        subprocess.run(["caddy", "start"], stderr=subprocess.DEVNULL)
         atexit.register(quit_caddy)
         time.sleep(2)  # Wait for Caddy to boot
         config = requests.request(method="GET", url=config_url)
