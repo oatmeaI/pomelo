@@ -6,7 +6,7 @@ import platform
 
 from melon.config import Config
 from melon.wizard import wizard_caddy
-from melon.strings import warn
+from melon.strings import warn, log, confirm
 
 
 def quit_caddy():
@@ -40,15 +40,30 @@ def init_caddy():
                 "Caddy problem, could be nothing - add better logs here and try to fix it"
             )
 
-    system = platform.system()
-    if system == "Darwin":
-        add_firewall_pfctl()
-    elif system == "Linux":
-        add_firewall_iptables()
-    else:
-        warn(
-            "Unable to configure firewall on Windows yet - please block port 32400 for all origins except localhost manually"
-        )
+    log(
+        "In order to force Plex to connect through Pomelo, we usually need to set up a firewall to block port 32400 for all origins except localhost."
+    )
+    log(
+        "If you have pfctl or iptables installed (on macOS and most Linux distros, you will have one), Pomelo can try to configure this for you. (If you're not sure if you have one of these tools installed, Pomelo will check for you)."
+    )
+    try_firewall = confirm(
+        "Would you like Pomelo to try to configure the firewall? It will be turned off when Pomelo quits. (This will require root privileges)"
+    )
+    if try_firewall:
+        try:
+            system = platform.system()
+            if system == "Darwin":
+                add_firewall_pfctl()
+            elif system == "Linux":
+                add_firewall_iptables()
+            else:
+                warn(
+                    "Unable to configure firewall on Windows yet - please block port 32400 for all origins except localhost manually"
+                )
+        except Exception as e:
+            warn(
+                "Pomelo was unable to configure the firewall automatically, please set it up manually."
+            )
 
     wizard_caddy()
 
