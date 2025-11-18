@@ -147,7 +147,12 @@ pass out proto tcp from 127.0.0.1 to any port 32400
     payload = subprocess.run(
         ["cat", "/etc/pf.conf", "-"], input=rules.encode("utf-8"), capture_output=True
     ).stdout
-    subprocess.run(["sudo", "pfctl", "-f", "-"], input=payload)
+    subprocess.run(
+        ["sudo", "pfctl", "-f", "-"],
+        input=payload,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
     atexit.register(del_firewall_pfctl)
 
 

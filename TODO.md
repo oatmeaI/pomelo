@@ -1,14 +1,14 @@
 # MVP
 - [ ] pfctl / iptables sudo explanation
-- [ ] pfctl / iptables logs out of output
 - [ ] make sure addresses etc in logs are correct
-- [ ] setup customConnections
 - [ ] Setup instructions + general docs
 - [ ] Docs for AnyRadios
 - [ ] Docs for how sort weighting works in AnyRadios
 - [ ] Early alpha stage disclaimer
 
 # Later
+- [ ] subprocess logs to files instead of devnull
+- [ ] setup customConnections
 - [ ] Verify config valid
 - [ ] figure out why start_dev boots everything twice
 - [ ] addHub helper method?
