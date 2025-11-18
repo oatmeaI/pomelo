@@ -35,10 +35,9 @@ def wizard_proxy():
         proxy_host.split(":") if ":" in proxy_host else [proxy_host, ""]
     )
 
-    hostname = socket.gethostname()
-    local_ip = socket.gethostbyname(hostname)
-
     if proxy_host == "":
+        hostname = socket.gethostname()
+        local_ip = socket.gethostbyname(hostname)
         proxy_host = local_ip  # get("https://api.ipify.org").content.decode("utf8")
 
     if proxy_port != "":
@@ -47,7 +46,7 @@ def wizard_proxy():
     server = createServer()
     id = server.machineIdentifier
     # id = "asdf"
-    print(f"\nGo to http://{local_ip}:{proxy_port}")
+    print(f"\nGo to http://{proxy_host}:{proxy_port}")
     print("\n===> First Time Setup <===")
     print("\t (If you've already done this, you can safely ignore these steps)")
     print(

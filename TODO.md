@@ -1,5 +1,6 @@
 # MVP
 - [ ] pfctl / iptables sudo explanation
+- [ ] separate steps for exposing externally
 - [ ] make sure addresses etc in logs are correct
 - [ ] Setup instructions + general docs
 - [ ] Docs for AnyRadios

@@ -1,9 +1,13 @@
 import requests
+import socket
 import subprocess
 import atexit
 import time
 import platform
+import os.path
 
+
+from melon.certs import create_certs, cert_path, key_path
 from melon.config import Config
 from melon.wizard import wizard_caddy
 from melon.strings import warn, log, confirm
@@ -11,6 +15,7 @@ from melon.strings import warn, log, confirm
 
 def quit_caddy():
     subprocess.run(["caddy", "stop"])
+    time.sleep(1)
 
 
 def init_caddy():
@@ -22,9 +27,12 @@ def init_caddy():
         config = requests.request(method="GET", url=config_url)
     except Exception as e:
         # TODO log to a file instead of dev null
-        subprocess.run(["caddy", "start"], stderr=subprocess.DEVNULL)
+        subprocess.run(
+            ["caddy", "start"],
+            # stderr=subprocess.DEVNULL
+        )
         atexit.register(quit_caddy)
-        time.sleep(2)  # Wait for Caddy to boot
+        time.sleep(2)  # Wait for Caddy to boot TODO: jank
         config = requests.request(method="GET", url=config_url)
 
     jsonConfig = config.json()
@@ -122,6 +130,36 @@ def add_firewall_iptables():
             "iptables",
             "-A",
             "INPUT",
+            "-p",
+            "tcp",
+            "--dport",
+            "32400",
+            "-j",
+            "DROP",
+        ]
+    )
+    subprocess.run(
+        [
+            "sudo",
+            "iptables",
+            "-A",
+            "INPUT",
+            "-i",
+            "lo",
+            "-p",
+            "tcp",
+            "--sport",
+            "32400",
+            "-j",
+            "ACCEPT",
+        ]
+    )
+    subprocess.run(
+        [
+            "sudo",
+            "iptables",
+            "-A",
+            "OUTPUT",
             "-i",
             "lo",
             "-p",
@@ -135,13 +173,11 @@ def add_firewall_iptables():
     atexit.register(del_firewall_iptables)
 
 
-# iptables -A OUTPUT -p tcp --dport 32400 -j DROP
-# iptables -A INPUT -i lo -p tcp --sport 32400 -j ACCEPT
-
-
 def add_firewall_pfctl():
     rules = """
 block drop out proto tcp from any to any port 32400
+block drop in proto tcp from any to any port 32400
+pass in proto tcp from 127.0.0.1 to any port 32400
 pass out proto tcp from 127.0.0.1 to any port 32400
 """
     payload = subprocess.run(
@@ -167,8 +203,22 @@ def init_config():
     plex_host = Config.plex_host
     plex_port = Config.plex_port
 
+    print(cert_path, key_path)
+    if not os.path.isfile(cert_path) or not os.path.isfile(key_path):
+        create_certs()
+
+    [proxy_host, proxy_port] = (
+        proxy_host.split(":") if ":" in proxy_host else [proxy_host, ""]
+    )
+
+    if proxy_host == "":
+        hostname = socket.gethostname()
+        # local_ip = socket.gethostbyname(hostname)
+        # proxy_host = "0.0.0.0"  # DEBUG
+
     payload = f"""
-{proxy_host} {{ 
+{proxy_host}:{proxy_port} {{ 
+    tls "{cert_path}" "{key_path}"
     reverse_proxy localhost:{pomelo_port} {{
         @error status 501 500 502 404
         handle_response @error {{

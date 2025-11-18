@@ -28,6 +28,7 @@ DEFAULT_CONFIG = {
                     "filters": {},
                     "sort": "userRating",
                     "sort_weight": 1,
+                    "sort_reverse": False,
                     "chance": 2,
                 },
                 {
@@ -150,12 +151,13 @@ class Plugin:
                 tracks.sort(
                     key=lambda track: getattr(track, sort_key)
                     or FIELD_MINIMUMS[sort_key]
-                    or 0,
+                    if sort_key in FIELD_MINIMUMS
+                    else 0,
                     reverse=reverse,
                 )
 
             sort_weight_max = source["sort_weight"] if "sort_weight" in source else 0.0
-            sort_weight_start = sort_weight_max / len(tracks)
+            sort_weight_start = sort_weight_max / len(tracks) if len(tracks) > 0 else 1
             sort_weight = 0.0
 
             for track in tracks:
