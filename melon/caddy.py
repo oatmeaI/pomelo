@@ -46,7 +46,7 @@ def init_caddy():
     log(
         "If you have pfctl or iptables installed (on macOS and most Linux distros, you will have one), Pomelo can try to configure this for you. (If you're not sure if you have one of these tools installed, Pomelo will check for you)."
     )
-    try_firewall = confirm(
+    try_firewall = Config.data["auto_firewall"] or confirm(
         "Would you like Pomelo to try to configure the firewall? It will be turned off when Pomelo quits. (This will require root privileges)"
     )
     if try_firewall:

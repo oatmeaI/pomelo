@@ -39,7 +39,7 @@ def wizard_proxy():
     local_ip = socket.gethostbyname(hostname)
 
     if proxy_host == "":
-        proxy_host = get("https://api.ipify.org").content.decode("utf8")
+        proxy_host = local_ip  # get("https://api.ipify.org").content.decode("utf8")
 
     if proxy_port != "":
         proxy_host = f"{proxy_host}:{proxy_port}"

@@ -26,6 +26,7 @@ SETTING_NAMES = {
     "music_section_id": "Music section ID",
     "caddy_url": "Caddy URL",
     "proxy_host": "Proxy host",
+    "auto_firewall": "Automatically try to enable firewall",
 }
 
 DEFAULTS = {
@@ -37,6 +38,7 @@ DEFAULTS = {
     "enabled_plugins": ["ExploreRadio", "AnyRadios"],
     "caddy_url": "http://localhost:2019",
     "proxy_host": ":5500",
+    "auto_firewall": False,
 }
 
 
