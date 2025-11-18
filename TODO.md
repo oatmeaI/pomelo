@@ -1,14 +1,17 @@
 # MVP
+- [ ] pfctl / iptables sudo explanation
+- [ ] pfctl / iptables logs out of output
+- [ ] make sure addresses etc in logs are correct
+- [ ] setup customConnections
 - [ ] Setup instructions + general docs
-- [ ] Get Caddy logs out of output
 - [ ] Docs for AnyRadios
 - [ ] Docs for how sort weighting works in AnyRadios
 - [ ] Early alpha stage disclaimer
 
 # Later
 - [ ] Verify config valid
+- [ ] figure out why start_dev boots everything twice
 - [ ] addHub helper method?
-- [ ] `pomelo config` command
 - [ ] better structure for boot log hooks
 - [ ] prettier CLI output ([Rich](https://github.com/Textualize/rich))
 
@@ -23,3 +26,7 @@
 - [ ] What does the `smart` property do on a hub item?
 - [ ] What does the `radio` property do on a hub item?
 - [ ] What other icons exist?
+
+
+customConnections set
+

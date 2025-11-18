@@ -38,3 +38,7 @@ def start_dev():
     log.setLevel(logging.ERROR)
     app = boot()
     app.run(port=Config.pomelo_port, debug=True)
+
+
+def config():
+    Config.setup()

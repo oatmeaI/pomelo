@@ -2,9 +2,11 @@ import requests
 import subprocess
 import atexit
 import time
+import platform
 
 from melon.config import Config
 from melon.wizard import wizard_caddy
+from melon.strings import warn
 
 
 def quit_caddy():
@@ -30,9 +32,112 @@ def init_caddy():
     if jsonConfig is None:
         init_config()
     else:
-        update_config(jsonConfig)
+        try:
+            update_config(jsonConfig)
+        except Exception as e:
+            # TODO:
+            print(
+                "Caddy problem, could be nothing - add better logs here and try to fix it"
+            )
+
+    system = platform.system()
+    if system == "Darwin":
+        add_firewall_pfctl()
+    elif system == "Linux":
+        add_firewall_iptables()
+    else:
+        warn(
+            "Unable to configure firewall on Windows yet - please block port 32400 for all origins except localhost manually"
+        )
 
     wizard_caddy()
+
+
+def del_firewall_iptables():
+    subprocess.run(
+        [
+            "sudo",
+            "iptables",
+            "-D",
+            "OUTPUT",
+            "-p",
+            "tcp",
+            "--dport",
+            "32400",
+            "-j",
+            "DROP",
+        ]
+    )
+    subprocess.run(
+        [
+            "sudo",
+            "iptables",
+            "-D",
+            "INPUT",
+            "-i",
+            "lo",
+            "-p",
+            "tcp",
+            "--sport",
+            "32400",
+            "-j",
+            "ACCEPT",
+        ]
+    )
+
+
+def add_firewall_iptables():
+    subprocess.run(
+        [
+            "sudo",
+            "iptables",
+            "-A",
+            "OUTPUT",
+            "-p",
+            "tcp",
+            "--dport",
+            "32400",
+            "-j",
+            "DROP",
+        ]
+    )
+    subprocess.run(
+        [
+            "sudo",
+            "iptables",
+            "-A",
+            "INPUT",
+            "-i",
+            "lo",
+            "-p",
+            "tcp",
+            "--sport",
+            "32400",
+            "-j",
+            "ACCEPT",
+        ]
+    )
+    atexit.register(del_firewall_iptables)
+
+
+# iptables -A OUTPUT -p tcp --dport 32400 -j DROP
+# iptables -A INPUT -i lo -p tcp --sport 32400 -j ACCEPT
+
+
+def add_firewall_pfctl():
+    rules = """
+block drop out proto tcp from any to any port 32400
+pass out proto tcp from 127.0.0.1 to any port 32400
+"""
+    payload = subprocess.run(
+        ["cat", "/etc/pf.conf", "-"], input=rules.encode("utf-8"), capture_output=True
+    ).stdout
+    subprocess.run(["sudo", "pfctl", "-f", "-"], input=payload)
+    atexit.register(del_firewall_pfctl)
+
+
+def del_firewall_pfctl():
+    subprocess.run(["sudo", "pfctl", "-f", "/etc/pf.conf"])
 
 
 def init_config():

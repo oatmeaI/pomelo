@@ -40,9 +40,9 @@ def wizard_proxy():
     if proxy_port != "":
         proxy_host = f"{proxy_host}:{proxy_port}"
 
-    server = createServer()
-    id = server.machineIdentifier
-
+    # server = createServer()
+    # id = server.machineIdentifier
+    id = "asdf"
     print("\n===> First Time Setup <===")
     print("\t (If you've already done this, you can safely ignore these steps)")
     print(

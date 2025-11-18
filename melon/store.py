@@ -6,7 +6,7 @@ class Store:
 
     def setToken(self, token):
         self.token = token
-        Config.writeSetting("token", token)
+        Config.write_setting("token", token)
 
 
 store = Store()

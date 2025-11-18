@@ -16,9 +16,11 @@ platformdirs = "^4.3.6"
 tomli-w = "^1.2.0"
 caddy-bin = "^2.10.2"
 watchdog = "^6.0.0"
+rich = "^14.2.0"
 
 [tool.poetry.scripts]
 start = "melon.main:start"
+config = "melon.main:config"
 start_dev = "melon.main:start_dev"
 
 [build-system]
