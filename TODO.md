@@ -1,11 +1,13 @@
 # MVP
 - [ ] pfctl / iptables sudo explanation
+- [ ] caddy not exiting?
 - [ ] separate steps for exposing externally
 - [ ] make sure addresses etc in logs are correct
 - [ ] Setup instructions + general docs
 - [ ] Docs for AnyRadios
 - [ ] Docs for how sort weighting works in AnyRadios
 - [ ] Early alpha stage disclaimer
+- [ ] don't bother trying to add to caddy setup if already running, just ask whether to start proxy server or not; if not it's up to you to config
 
 # Later
 - [ ] subprocess logs to files instead of devnull
