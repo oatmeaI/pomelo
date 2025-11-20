@@ -1,6 +1,6 @@
 APP_NAME = "pomelo"
 
-CONFIG_FILE_NAME = "config.toml"
+CONFIG_FILE_NAME = "pomelo_config.toml"
 
 TOKEN_KEY = "X-Plex-Token"
 DEVICE_NAME_KEY = "X-Plex-Device-Name"

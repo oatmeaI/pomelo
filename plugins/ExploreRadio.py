@@ -2,11 +2,10 @@ import random
 import json
 import copy
 
-from plexapi.server import PlayQueue, PlexServer
+from plexapi.server import PlayQueue
 from melon import constants
 from melon.config import Config
-from melon.store import store
-from melon.util import bail, forwardRequest, requestToServer
+from melon.util import bail, createServer, forwardRequest, requestToServer
 
 
 PLUGIN_NAME = "ExploreRadio"
@@ -45,9 +44,8 @@ class Plugin:
 
     def server(self):
         if self._server is None:
-            self._server = PlexServer(
-                f"http://{Config.plex_host}:{Config.plex_port}", store.token
-            )
+            self._server = createServer()
+
         return self._server
 
     # FIXME:

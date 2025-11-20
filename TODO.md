@@ -1,6 +1,4 @@
 # MVP
-- [ ] pfctl / iptables sudo explanation
-- [ ] caddy not exiting?
 - [ ] separate steps for exposing externally
 - [ ] make sure addresses etc in logs are correct
 - [ ] Setup instructions + general docs
@@ -33,3 +31,14 @@
 
 customConnections set
 
+- make config.toml work (or pull from docker env?)
+- make docker build correct
+- dunno how to existing plex migrate to docker correctly
+
+podman-compose up
+podman-compose exec pomelo /bin/bash
+poetry install
+source .venv/bin/activate
+poetry run start
+p4uEJfzuwK3Sy2VWx_Hy
+add ip or whatever to custom server access urls, turn off GDM, remote access and relay

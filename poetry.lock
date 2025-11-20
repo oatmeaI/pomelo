@@ -698,32 +698,20 @@ watchdog = ["watchdog (>=2.3)"]
 
 [[package]]
 name = "xmltodict"
-version = "0.14.2"
+version = "1.0.2"
 description = "Makes working with XML feel like you are working with JSON"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "xmltodict-0.14.2-py2.py3-none-any.whl", hash = "sha256:20cc7d723ed729276e808f26fb6b3599f786cbc37e06c65e192ba77c40f20aac"},
-    {file = "xmltodict-0.14.2.tar.gz", hash = "sha256:201e7c28bb210e374999d1dde6382923ab0ed1a8a5faeece48ab525b7810a553"},
+    {file = "xmltodict-1.0.2-py3-none-any.whl", hash = "sha256:62d0fddb0dcbc9f642745d8bbf4d81fd17d6dfaec5a15b5c1876300aad92af0d"},
+    {file = "xmltodict-1.0.2.tar.gz", hash = "sha256:54306780b7c2175a3967cad1db92f218207e5bc1aba697d887807c0fb68b7649"},
 ]
 
-[[package]]
-name = "xmltojson"
-version = "2.0.3"
-description = "A Python module and cli tool to quickly convert xml text or files into json"
-optional = false
-python-versions = "<4.0,>=3.7"
-groups = ["main"]
-files = [
-    {file = "xmltojson-2.0.3-py3-none-any.whl", hash = "sha256:1b68519bd14fbf3e28baa630b8c9116b5d3aa8976648f277a78ae3448498889a"},
-    {file = "xmltojson-2.0.3.tar.gz", hash = "sha256:68a0022272adf70b8f2639186172c808e9502cd03c0b851a65e0760561c7801d"},
-]
-
-[package.dependencies]
-xmltodict = "0.14.2"
+[package.extras]
+test = ["pytest", "pytest-cov"]
 
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "59accec6d5f65a677a51b27ba527088e52250b5a1b5ddee7440339a877a69871"
+content-hash = "8a6f25698a6d2306bf6077118c53785cd4034e31edb3cd981fefe25094f4bb5b"

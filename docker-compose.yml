@@ -1,0 +1,28 @@
+version: "3"
+services:
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    environment:
+      - PUID=501
+      - PGID=20
+      - TZ=Etc/UTC
+      - VERSION=docker
+      # - PLEX_CLAIM=claim-zmEYLCLawsBZwimg8XtV 
+    ports:
+      - 5001:32400 # In case you need to reach the original server for some reason
+    volumes:
+      - /Users/oatmeal/plex:/config
+      - /Users/oatmeal/Documents/Electronic Music/Exports/Full Tracks:/music
+    restart: unless-stopped
+
+  pomelo:
+    build: .
+    ports:
+      - 5500:5500
+      - 2019:2019
+    volumes:
+      - ./:/pomelo # link code for dev
+      - /Users/oatmeal/plex:/config # Make this the same as line 15!!
+    depends_on:
+      - plex

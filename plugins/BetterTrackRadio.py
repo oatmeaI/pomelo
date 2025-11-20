@@ -2,9 +2,8 @@ import random
 
 from melon.config import Config
 from melon import constants
-from melon.store import store
-from plexapi.server import PlexServer, PlayQueue
-from melon.util import forwardRequest, requestToServer
+from plexapi.server import PlayQueue
+from melon.util import createServer, forwardRequest, requestToServer
 
 DEFAULT_CONFIG = {}
 PLUGIN_NAME = "BetterTrackRadio"
@@ -29,9 +28,7 @@ class Plugin:
 
     def server(self):
         if self._server is None:
-            self._server = PlexServer(
-                f"http://{Config.plex_host}:{Config.plex_port}", store.token
-            )
+            self._server = createServer()
         return self._server
 
     def setQueueIdForDevice(self, device, queueId):

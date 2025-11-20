@@ -1,15 +1,10 @@
 from flask import request, abort
 from melon.util import bail, buildResponse, forwardRequest
-from melon.store import store
-from melon.constants import TOKEN_KEY
 
 
 def routeHandler(handlers, route):
     def inner(*args):
         try:
-            if store.token is None and TOKEN_KEY in request.args:
-                store.setToken(request.args[TOKEN_KEY])
-
             response = forwardRequest(request, route)
             interceptedResponse = response
 

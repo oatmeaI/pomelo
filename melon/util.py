@@ -1,7 +1,6 @@
 import requests
 from flask import abort
 from melon.constants import TOKEN_KEY
-from melon.store import store
 from melon.config import Config
 from plexapi.server import PlexServer
 
@@ -27,7 +26,9 @@ def buildResponse(response):
 
 
 def createServer():
-    return PlexServer(f"http://{Config.plex_host}:{Config.plex_port}", store.token)
+    return PlexServer(
+        f"http://{Config.plex_host}:{Config.plex_port}", Config.plex_token
+    )
 
 
 def bail():
@@ -39,7 +40,7 @@ def requestToServer(endpoint, _headers):
 
     # Create a new headers obj since sometimes what we get passed in is immutable
     headers = {}
-    headers[TOKEN_KEY] = store.token
+    headers[TOKEN_KEY] = Config.plex_token
     for k, v in _headers.items():
         if k in excluded_headers:
             continue
