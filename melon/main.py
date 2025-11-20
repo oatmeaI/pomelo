@@ -8,8 +8,6 @@ from melon.plugins import init_plugins
 from melon.routes import init_routes
 from melon.wizard import wizard_app, wizard_proxy, wizard_init
 
-# p4uEJfzuwK3Sy2VWx_Hy
-
 
 def init_app():
     app = Flask(__name__)
@@ -40,7 +38,3 @@ def start_dev():
     log.setLevel(logging.ERROR)
     app = boot()
     app.run(port=Config.pomelo_port, debug=True)
-
-
-def config():
-    Config.setup()
