@@ -1,8 +1,8 @@
 import requests
 from flask import abort
-from melon.constants import TOKEN_KEY
-from melon.config import Config
 from plexapi.server import PlexServer
+from pomelo.constants import TOKEN_KEY
+from pomelo.config import Config
 
 excluded_headers = [
     "content-encoding",

@@ -1,7 +1,7 @@
 import importlib
-from melon.constants import PLUGIN_NAMESPACE
-from melon.config import Config
-from melon.wizard import wizard_plugins
+from pomelo.constants import PLUGIN_NAMESPACE
+from pomelo.config import Config
+from pomelo.wizard import wizard_plugins
 
 
 def init_plugins():

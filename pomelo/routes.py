@@ -1,5 +1,5 @@
 from flask import request, abort
-from melon.util import bail, buildResponse, forwardRequest
+from pomelo.util import bail, buildResponse, forwardRequest
 
 
 def routeHandler(handlers, route):

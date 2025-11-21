@@ -6,4 +6,4 @@ TOKEN_KEY = "X-Plex-Token"
 DEVICE_NAME_KEY = "X-Plex-Device-Name"
 URI_KEY = "uri"
 
-PLUGIN_NAMESPACE = "plugins"
+PLUGIN_NAMESPACE = "pomelo.plugins"

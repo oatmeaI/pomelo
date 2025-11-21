@@ -70,3 +70,7 @@ station_name = "Cool Guys Radio"
 
 ![IMG_5578](https://github.com/user-attachments/assets/4e7d842e-55a8-4bbc-a0a5-e0278b5de77b)
 
+
+# Build
+./build.sh runs poetry install, poetry build and podman-compose up --build. Switch `podman` to `docker` if need be.
+Dockerfile copies the `dist` created by `poetry` into the container and runs `pip install`

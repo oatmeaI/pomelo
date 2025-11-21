@@ -1,5 +1,5 @@
-from melon.config import Config
-from melon.util import createServer
+from pomelo.config import Config
+from pomelo.util import createServer
 
 
 def wizard_init():
@@ -29,8 +29,9 @@ def wizard_proxy():
     plex_host = Config.plex_host
     plex_port = Config.plex_port
 
-    server = createServer()
-    id = server.machineIdentifier
+    # server = createServer()
+    # id = server.machineIdentifier
+    id = "asdf"
 
     print(f"\nGo to http://localhost:{caddy_listen_port}")
     print("\n===> First Time Setup <===")

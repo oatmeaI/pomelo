@@ -1,9 +1,9 @@
 import random
 
-from melon.config import Config
-from melon import constants
+from pomelo.config import Config
+from pomelo import constants
 from plexapi.server import PlayQueue
-from melon.util import createServer, forwardRequest, requestToServer
+from pomelo.util import createServer, forwardRequest, requestToServer
 
 DEFAULT_CONFIG = {}
 PLUGIN_NAME = "BetterTrackRadio"

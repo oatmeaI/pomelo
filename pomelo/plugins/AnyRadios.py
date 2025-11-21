@@ -4,9 +4,9 @@ from random import choices, shuffle
 
 from plexapi.server import PlayQueue
 
-from melon.config import Config
-from melon import constants
-from melon.util import createServer, requestToServer
+from pomelo.config import Config
+from pomelo import constants
+from pomelo.util import createServer, requestToServer
 
 # Anything not listed here will default to 0
 FIELD_MINIMUMS = {

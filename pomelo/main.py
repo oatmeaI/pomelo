@@ -2,11 +2,11 @@ from waitress import serve
 from flask import Flask
 import logging
 
-from melon.config import Config
-from melon.caddy import init_caddy
-from melon.plugins import init_plugins
-from melon.routes import init_routes
-from melon.wizard import wizard_app, wizard_proxy, wizard_init
+from pomelo.config import Config
+from pomelo.caddy import init_caddy
+from pomelo.plugin import init_plugins
+from pomelo.routes import init_routes
+from pomelo.wizard import wizard_app, wizard_proxy, wizard_init
 
 
 def init_app():

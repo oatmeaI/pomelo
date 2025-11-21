@@ -3,9 +3,9 @@ import json
 import copy
 
 from plexapi.server import PlayQueue
-from melon import constants
-from melon.config import Config
-from melon.util import bail, createServer, forwardRequest, requestToServer
+from pomelo import constants
+from pomelo.config import Config
+from pomelo.util import bail, createServer, forwardRequest, requestToServer
 
 
 PLUGIN_NAME = "ExploreRadio"

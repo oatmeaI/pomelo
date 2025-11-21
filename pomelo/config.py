@@ -5,8 +5,8 @@ import os
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
-from melon.certs import read_prefs
-from melon.constants import CONFIG_FILE_NAME
+from pomelo.certs import read_prefs
+from pomelo.constants import CONFIG_FILE_NAME
 
 SETTING_NAMES = {
     "plex_host": "Plex server address",

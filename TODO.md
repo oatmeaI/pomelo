@@ -1,6 +1,4 @@
 # MVP
-- [ ] make docker build correct
-- [ ] remove config command
 - [ ] make sure addresses etc in logs are correct
 - [ ] Setup instructions + general docs (incl. docker compose)
 - [ ] Docs for AnyRadios

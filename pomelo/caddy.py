@@ -1,8 +1,8 @@
 import requests
 import os.path
 
-from melon.certs import create_certs, cert_path, key_path
-from melon.config import Config
+from pomelo.certs import create_certs, cert_path, key_path
+from pomelo.config import Config
 
 
 def init_caddy():
