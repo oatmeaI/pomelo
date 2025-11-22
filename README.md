@@ -74,3 +74,4 @@ station_name = "Cool Guys Radio"
 # Build
 ./build.sh runs poetry install, poetry build and podman-compose up --build. Switch `podman` to `docker` if need be.
 Dockerfile copies the `dist` created by `poetry` into the container and runs `pip install`
+Cachebust arg in dockerfile + build.sh makes sure that docker doesn't cache the old code

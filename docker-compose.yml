@@ -20,6 +20,6 @@ services:
     ports:
       - 5500:5500
     volumes:
-      - /Users/oatmeal/plex:/config # Make this the same as line 15!!
+      - /Users/oatmeal/plex:/config # !!Make this the same as line 14!!
     depends_on:
       - plex

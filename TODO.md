@@ -7,9 +7,9 @@
 - [ ] mention charlie in readme
 
 # Later
-- [ ] unfuck dev setup (linking dir to docker is kinda weird I think)
-- [ ] long run docker shouldn't have to install poetry i guess; look at how replex did it
+- [ ] run locally for dev instead of constantly having to rebuild docker image
 - [ ] subprocess logs to files instead of devnull
+- [ ] plugins from separate dir?
 - [ ] setup customConnections (customConnections set)
 - [ ] Verify config valid
 - [ ] addHub helper method?
@@ -30,3 +30,8 @@
 
 
 add ip or whatever to custom server access urls, turn off GDM, remote access and relay
+
+How to test with Charlie?
+1. Pull repo
+2. Will `docker-compose up` work if we stop the existing plex container and run this one?
+3. Or maybe we build the dockerfile, and tag the image etc, and then add it to the existing compose file?
