@@ -1,4 +1,10 @@
 #! /bin/bash
+
+compose_command="docker-compose"
+if ! [ -x "$(command -v $compose_command)" ]; then
+    compose_command="podman-compose"
+fi
+
 poetry install
 poetry build
-podman-compose up --build --build-arg CACHEBUST="$(date +%s)"
+$compose_command up --build --build-arg CACHEBUST="$(date +%s)"
