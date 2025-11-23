@@ -48,7 +48,7 @@ class Plugin:
 
         return self._server
 
-    # FIXME:
+    # FIXME: update playqueue when getting small
     def paths(self):
         # queueId = self.getQueueIdForRequest(request)
         return {

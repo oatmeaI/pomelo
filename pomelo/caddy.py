@@ -1,5 +1,6 @@
 import requests
 import os.path
+import subprocess
 
 from pomelo.certs import create_certs, cert_path, key_path
 from pomelo.config import Config
@@ -12,12 +13,14 @@ def init_caddy():
     plex_host = Config.plex_host
     plex_port = Config.plex_port
 
+    # subprocess.run( ["caddy", "start"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
     if not os.path.isfile(cert_path) or not os.path.isfile(key_path):
         create_certs()
 
-    # tls "{cert_path}" "{key_path}"
     payload = f"""
 :{caddy_listen_port} {{ 
+    tls "{cert_path}" "{key_path}"
     reverse_proxy localhost:{pomelo_port} {{
         @error status 501 500 502 404
         handle_response @error {{

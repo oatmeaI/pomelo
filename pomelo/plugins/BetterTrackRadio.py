@@ -48,7 +48,7 @@ class Plugin:
         self.tracksByQueue[queue.playQueueID].append(track)
         queue.addItem(track)
 
-    # TODO: fixme
+    # FIXME: update queue when it gets short
     def paths(self):
         # queueId = self.getQueueIdForRequest(request)
         return {
@@ -57,7 +57,6 @@ class Plugin:
         }
 
     def startStation(self, path, request, response):
-        # TODO: instead of try/except, detect the case correctly
         try:
             if constants.URI_KEY in request.args:
                 uri = request.args[constants.URI_KEY]

@@ -1,0 +1,28 @@
+version: "3"
+services:
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - VERSION=docker
+    ports:
+      - 5001:32400            # In case you need to reach the original server for some reason
+    volumes:
+      - /plex:/config
+      - /media/music:/music
+      - /media/movies:/movies
+      - /media/tv:/tv
+    restart: unless-stopped
+
+  pomelo:
+    build: .
+    ports:
+      - 32400:5500
+    volumes:
+      - /plex:/config         # !!Make this the same as line 14!!
+      - /plex/pomelo:/pomelo  # This can be anywhere
+    depends_on:
+      - plex

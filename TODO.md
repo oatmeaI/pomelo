@@ -1,14 +1,5 @@
 # MVP
-- [ ] notes on how to make work with plex outside docker
-    - token, processed machineIdentifier out of plist, into fake prefs.xml
-    - override plex host in config toml
-        host.docker.internal
-        turn off caddy inside container and just use main caddy
-    - tls doesn't work
-    - need to set allowLocalhostOnly
-    
-- [ ] do I need to bother with the certs at all given the new setup?
-- [ ] dynamic settings reload isn't working?
+- [ ] how to build for multi-platform? / push to dockerhub
 - [ ] make sure addresses etc in logs are correct
 - [ ] Setup instructions + general docs (incl. docker compose)
 - [ ] Docs for AnyRadios
@@ -17,7 +8,17 @@
 - [ ] mention charlie in readme
 
 # Later
+- [ ] notes on how to make work with plex outside docker
+    - token, processed machineIdentifier out of plist, into fake prefs.xml
+    - override plex host in config toml
+        host.docker.internal
+        turn off caddy inside container and just use main caddy
+    - tls doesn't work
+    - need to set allowLocalhostOnly
+- [ ] look into user setting in dockerfile
 - [ ] run locally for dev instead of constantly having to rebuild docker image
+- [ ] shove music videos into extras for music / album / artists plugin
+- [ ] cloud to butt plus plugin
 - [ ] subprocess logs to files instead of devnull
 - [ ] plugins from separate dir?
 - [ ] setup customConnections (customConnections set)
@@ -39,9 +40,4 @@
 - [ ] What other icons exist?
 
 
-add ip or whatever to custom server access urls, turn off GDM, remote access and relay
-
-How to test with Charlie?
-1. Pull repo
-2. Will `docker-compose up` work if we stop the existing plex container and run this one?
-3. Or maybe we build the dockerfile, and tag the image etc, and then add it to the existing compose file?
+add ip or whatever to custom server access urls, turn off GDM, and relay

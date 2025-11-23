@@ -7,4 +7,4 @@ fi
 
 poetry install
 poetry build
-$compose_command up --build --build-arg CACHEBUST="$(date +%s)"
+$compose_command up --build

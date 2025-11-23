@@ -2,9 +2,6 @@ import tomllib
 import tomli_w
 import os
 
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
-
 from pomelo.certs import read_prefs
 from pomelo.constants import CONFIG_FILE_NAME
 
@@ -30,15 +27,27 @@ DEFAULTS = {
 }
 
 
-class _Config(FileSystemEventHandler):
+class _Config:
     def __init__(self):
         self.data = DEFAULTS
 
-        self.config_dir = "/config"
+        self.config_dir = "/pomelo"
         self.config_file_path = f"{self.config_dir}/{CONFIG_FILE_NAME}"
 
         self.load_config()
 
+        self.set_config()
+
+        if self.plex_token == "":
+            prefs = read_prefs()
+            self.plex_token = prefs["@PlexOnlineToken"]
+            self.write_config()
+
+        if not os.path.exists(self.config_file_path):
+            self.write_config()
+
+    # TODO: deprecate
+    def set_config(self):
         self.plex_host = self.data["plex_host"]
         self.plex_port = self.data["plex_port"]
         self.music_section_id = self.data["music_section_id"]
@@ -48,34 +57,21 @@ class _Config(FileSystemEventHandler):
         self.pomelo_port = self.data["pomelo_port"]
         self.plex_token = self.data["plex_token"]
 
-        if self.plex_token == "":
-            prefs = read_prefs()
-            self.plex_token = prefs["@PlexOnlineToken"]
-
-        if not os.path.exists(self.config_file_path):
-            self.write_config()
-
-        observer = Observer()
-        observer.schedule(
-            self,
-            self.config_dir,
-        )
-        observer.start()
-
     def load_config(self):
+        print("load config")
         if os.path.exists(self.config_file_path):
             with open(self.config_file_path, "rb") as f:
                 self.data = DEFAULTS | tomllib.load(f)
-
-    def on_modified(self, event):
-        if event.src_path == self.config_file_path:
-            self.load_config()
+                print(self.data)
+        else:
+            print("file no exist")
 
     def getPluginSettings(self, pluginName):
         return self.data[pluginName] if pluginName in self.data else {}
 
     def write_config(self):
-        with open(self.config_file_path, "xb") as f:
+        mode = "wb" if os.path.exists(self.config_file_path) else "xb"
+        with open(self.config_file_path, mode) as f:
             tomli_w.dump(self.data, f)
 
 

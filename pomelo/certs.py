@@ -4,9 +4,9 @@ import hashlib
 
 prefs_path = "/config/Library/Application Support/Plex Media Server/Preferences.xml"
 p12_path = "/config/Library/Application Support/Plex Media Server/Cache/cert-v2.p12"
-cert_path = "/config/cert.pem"
-key_pem_path = "/config/key.pem"
-key_path = "/config/server.key"
+cert_path = "/config/pomelo/cert.pem"
+key_pem_path = "/config/pomelo/key.pem"
+key_path = "/config/pomelo/server.key"
 
 
 def read_prefs():
