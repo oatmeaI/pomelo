@@ -6,7 +6,7 @@ from pomelo.config import Config
 from pomelo.caddy import init_caddy
 from pomelo.plugin import init_plugins
 from pomelo.routes import init_routes
-from pomelo.wizard import wizard_app, wizard_proxy, wizard_init
+from pomelo.wizard import wizard_app, wizard_init
 
 
 def init_app():
@@ -23,7 +23,6 @@ def boot():
     init_routes(app, plugins)
 
     wizard_app()
-    wizard_proxy()
 
     return app
 

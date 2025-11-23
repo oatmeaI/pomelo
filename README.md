@@ -1,67 +1,89 @@
 # Pomelo (for Plex) 🐶
 ![Static Badge](https://img.shields.io/badge/made_by_hand-not_ai-blue?style=for-the-badge)
-`pomelo` is a tool that allows you to extend the functionality of your Plex server in almost any way imaginable.
+`pomelo` is a tool that allows you to extend the functionality of your Plex server in almost any way imaginable. `pomelo` runs proxy server that sits between your Plex server and your Plex client, 
+allowing you to intercept & modify requests to, and responses from the Plex server. This allows you to do things like add custom hubs, change what buttons do, how metadata is displayed...or just about anything else.
 
 ## How?
-`pomelo` is a proxy server that sits between your Plex server and your Plex client, allowing you to intercept & modify requests to, and responses from the Plex server. This allows you to do things like add custom Stations, change what buttons do or how metadata is displayed...or just about anything else.
+Pomelo is built to run in a container, as part of a compose stack with Plex Media Server. If you're already running PMS inside a container, adding Pomelo is super easy - just update your `docker-compose.yml` to add Pomelo
+to the stack:
+```yml
+version: "3"
+services:
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - VERSION=docker
+    ports:
+      - 5001:32400            # In case you need to reach the original server for some reason
+    volumes:
+      - /plex:/config
+      - /media/music:/music
+      - /media/movies:/movies
+      - /media/tv:/tv
+    restart: unless-stopped
 
-## Usage
-Setting up `pomelo` takes a little bit of work, because we need to trick Plex into always connecting via `pomelo` instead of connecting directly to the Plex server. There are 3 main steps:
-
-### 1. Start Pomelo
-0. Ensure [Poetry](https://python-poetry.org/) is installed
-1. `git clone` this repo
-2. Run `poetry install` in the project root
-3. Run `poetry start`
-(In the future, we'll distribute an actual binary and you won't need to clone the repo or use Poetry...but for now...)
-
-### 2. Configure your Plex server
-1. **Add Pomelo's URL to Plex:** In the Network tab, click "Show Advanced", find the "Custom server access URLs" field, and `http://<Your IP>:5200`. (`pomelo` runs on port 5200 by default; you can change this in the config). 
-2. **Disable Remote Access:** In your Plex server settings, disable Remote Access (don't worry, you'll still be able to access your server remotely)
-3. **Force Plex to use Pomelo:** Following the [Plex documentation on changing hidden settings](https://support.plex.tv/articles/201105343-advanced-hidden-server-settings/) to set `allowLocalhostOnly 1` (on my Mac, I ran `defaults write com.plexapp.plexmediaserver allowLocalhostOnly 1`). This tells Plex not to allow LAN connections, forcing your clients to to connect via Pomelo. Alternately, you can make a firewall rule to block the port that Plex runs on - usually 32400.
-
-## Plugins
-Extensions to Plex functionality served by pomelo are handled by plugins. Currently there is only one plugin - Explore Radio - and all plugins must be bundled with Pomelo. In the future, there will be more plugins which over more functionlality, and a way to install plugins not bundled with Pomelo (see the Roadmap below).
-
-### ExploreRadio
-`ExploreRadio` is the reason I created pomelo. The Explore Radio Plugin adds a new Station to your Music library which tries to play a pretty even mix of songs you've rated highly and songs you've never heard before, while maintaining a vibe (using Plex's sonic similarity feature).
-
-#### Options
-`ExploreRadio` offers one option - `station_name` - which determines what the Explore station will be named in the UI.
+  pomelo:
+    image: oatmealmonster/pomelo:latest
+    ports:
+      - 32400:5500
+    volumes:
+      - /plex:/config         # !!Make this the same as line 14!!
+      - /plex/pomelo:/pomelo  # This can be anywhere - this is where Pomelo will store it's configuration files
+    depends_on:
+      - plex
+```
+A couple things to note:
+- Pomelo _requires_ a volume mapping from the directory on the host machine where the Plex libary is stored, to `/config`
+- Your Plex Media Server container must not be running networking in host mode; the Pomelo container needs to bind to port 32400
 
 ## Config
-Pomelo's config file lives at the `user_config_dir` specified by [platformdirs](https://pypi.org/project/platformdirs/) - on macOS, it's `~/Library/Application Support/pomelo/config.toml`.
-The available options and their defaults are:
+Pomelo stores a `pomelo_config.toml` file in the `/pomelo` volume specified in your `docker-compose.yml`. Most of the options should be left at their defaults 99% of the time, with the exception
+of plugin configuation (see below)
+
 |Option name|What it does|Default value|
 |-----------|------------|-------------|
-|`server_address`|The address of your Plex server.|`http://127.0.0.`|
-|`server_port`|The port your Plex server is listening on.|`32400`|
-|`music_section`|The name of your Music library on your Plex server|`Music`|
-|`port`|The port that `pomelo` should listen on|`5200`|
-|`token`|The token for accessing your Plex server. Pomelo will try to populate this automatically, but you can override it if you need to for some reason.|`None`|
-|`enabled_plugins`|A list of bundled plugins to that should be enabled|`["ExploreRadio"]`|
+|`caddy_admin_url`|Specifies the admin url for the [Caddy](https://caddyserver.com/) server that Pomelo runs. Should be left at default.|`http://localhost:2019`|
+|`caddy_listen_port`|The port the Caddy server should listen on. Should be left at default.|`5500`|
+|`plex_host`|The url to the Plex server. Should only be changed if you know what you're doing.|`plex`|
+|`plex_port`|The port the Plex server is running on. Should only be changed if you know what you're doing.|`32400`|
+|`plex_token`|An access token for requests to your Plex server. Pomelo should be able to populate this automatically; if you run into issues you can set it yourself: [Finding X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/) |``|
+|`pomelo_port`|The port (on the container) that Pomelo runs on. You shouldn't need to change this, but if you do, you'll need to update your `docker-compose.yml` accordingly.|`32400`|
+|`enabled_plugins`|A list of plugins that Pomelo should load & run. Feel free to edit & update this as you wish.|`["pomelo.plugins.ExploreRadio", "pomelo.plugins.AnyRadios"]`|
+
+## Plugins
+Extensions to Plex functionality served by Pomelo are handled by plugins. Pomelo currently comes bundled with three plugins, and can load external plugins as well.
+
+### External Plugins
+External plugins can be placed in `/pomelo/plugins`, and added to the `enabled_plugins` list in `pomelo_config.toml`.
 
 ### Plugin Config
-Some plugins offer their own config options. These can be specified under `[plugin_config.{Plugin Name}]` in the `config.toml`
-
-### Example config.toml:
-(This is the config that I use)
+Some plugins offer their own config options. These can be specified under `[{Plugin Name}]` in `pomelo_config.toml`:
 ```toml
-server_address = "http://127.0.0.1"
-server_port = 32400
-music_section = "Music"
-port = 5200
-token = "<Plex token here>"
-enabled_plugins = [
-    "ExploreRadio",
-    "BetterTrackRadio",
-    "SmartShuffle",
-    "AnyRadios",
-]
-
-[plugin_config.ExploreRadio]
-station_name = "Cool Guys Radio"
+[ExploreRadio]
+station_name = "Cool Radio"
 ```
+Available options for each builtin plugin are listed in the documentation for each plugin.
+
+### Builtin Plugins
+
+#### ExploreRadio
+`ExploreRadio` is the reason I created pomelo. The Explore Radio Plugin adds a new Station to your Music library which tries to play a pretty even mix of songs you've rated highly and songs you've never heard before, while maintaining a vibe (using Plex's sonic similarity feature).
+
+##### Options
+`ExploreRadio` offers one option - `station_name` - which determines what the Explore station will be named in the UI.
+
+
+
+## How does it work?
+TODO
+
+## Thanks
+
+## Prior Art
 
 ## Roadmap
 - [ ] Plugin developer documentation
@@ -70,8 +92,3 @@ station_name = "Cool Guys Radio"
 
 ![IMG_5578](https://github.com/user-attachments/assets/4e7d842e-55a8-4bbc-a0a5-e0278b5de77b)
 
-
-# Build
-./build.sh runs poetry install, poetry build and podman-compose up --build. Switch `podman` to `docker` if need be.
-Dockerfile copies the `dist` created by `poetry` into the container and runs `pip install`
-Cachebust arg in dockerfile + build.sh makes sure that docker doesn't cache the old code

@@ -3,3 +3,4 @@ __pycache__
 caddy
 dist
 docker-compose.yml
+TODO.md

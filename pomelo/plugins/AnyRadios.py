@@ -18,6 +18,7 @@ FIELD_MINIMUMS = {
 PLUGIN_NAME = "AnyRadios"
 DEFAULT_CONFIG = {
     "length": 100,
+    "enabled_hubs": [1],
     "stations": [
         {
             "name": "Smart Shuffle",
@@ -57,11 +58,16 @@ class Plugin:
         return self._server
 
     def paths(self):
-        return {
-            f"/hubs/sections/{Config.music_section_id}": self.addStations,
+        hubs = self.config["enabled_hubs"]
+        routes = {
             "/anyradios": self.returnStations,
             "/playQueues": self.startStation,
         }
+        for hub in hubs:
+            key = f"/hubs/sections/{hub}"
+            routes[key] = self.addStations
+
+        return routes
 
     def returnStations(self, path, request, response):
         items = self.buildStations()

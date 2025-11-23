@@ -18,7 +18,7 @@ services:
     restart: unless-stopped
 
   pomelo:
-    build: .
+    image: oatmealmonster/pomelo:latest
     ports:
       - 32400:5500
     volumes:

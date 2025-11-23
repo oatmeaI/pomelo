@@ -5,15 +5,6 @@ import os
 from pomelo.certs import read_prefs
 from pomelo.constants import CONFIG_FILE_NAME
 
-SETTING_NAMES = {
-    "plex_host": "Plex server address",
-    "plex_port": "Plex server port",
-    "plex_token": "Plex token",
-    "pomelo_port": "Pomelo port",
-    "music_section_id": "Music section ID",
-    "caddy_url": "Caddy admin URL",
-    "caddy_listen_port": "Port for Caddy to listen on",
-}
 
 DEFAULTS = {
     "caddy_admin_url": "http://localhost:2019",
@@ -22,8 +13,7 @@ DEFAULTS = {
     "plex_port": 32400,
     "plex_token": "",
     "pomelo_port": 5200,
-    "music_section_id": 1,
-    "enabled_plugins": ["ExploreRadio", "AnyRadios"],
+    "enabled_plugins": ["pomelo.plugins.ExploreRadio", "pomelo.plugins.AnyRadios"],
 }
 
 
@@ -50,7 +40,6 @@ class _Config:
     def set_config(self):
         self.plex_host = self.data["plex_host"]
         self.plex_port = self.data["plex_port"]
-        self.music_section_id = self.data["music_section_id"]
         self.enabled_plugins = self.data["enabled_plugins"]
         self.caddy_admin_url = self.data["caddy_admin_url"]
         self.caddy_listen_port = self.data["caddy_listen_port"]
@@ -58,13 +47,9 @@ class _Config:
         self.plex_token = self.data["plex_token"]
 
     def load_config(self):
-        print("load config")
         if os.path.exists(self.config_file_path):
             with open(self.config_file_path, "rb") as f:
                 self.data = DEFAULTS | tomllib.load(f)
-                print(self.data)
-        else:
-            print("file no exist")
 
     def getPluginSettings(self, pluginName):
         return self.data[pluginName] if pluginName in self.data else {}

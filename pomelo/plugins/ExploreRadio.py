@@ -11,7 +11,7 @@ from pomelo.util import bail, createServer, forwardRequest, requestToServer
 PLUGIN_NAME = "ExploreRadio"
 HIJACK = "hijack"
 STATION_KEY = "explore"
-DEFAULT_CONFIG = {"station_name": "Explore Radio"}
+DEFAULT_CONFIG = {"station_name": "Explore Radio", "enabled_hubs": [1]}
 
 
 def probably(chance):
@@ -26,8 +26,7 @@ class Plugin:
     favorites = 1
 
     def __init__(self):
-        _config = Config.getPluginSettings(PLUGIN_NAME)
-        self.config = _config if _config else DEFAULT_CONFIG
+        self.config = DEFAULT_CONFIG | Config.getPluginSettings(PLUGIN_NAME)
 
     def setQueueIdForDevice(self, device, queueId):
         self.queues[device] = queueId
@@ -51,11 +50,16 @@ class Plugin:
     # FIXME: update playqueue when getting small
     def paths(self):
         # queueId = self.getQueueIdForRequest(request)
-        return {
-            "/hubs/sections/1": self.addExploreStation,
+        # f"playQueues/{str(queueId)}": self.playQueues,
+        hubs = self.config["enabled_hubs"]
+        routes = {
             "/playQueues": self.startStation,
-            # f"playQueues/{str(queueId)}": self.playQueues,
         }
+        for hub in hubs:
+            key = f"/hubs/sections/{hub}"
+            routes[key] = self.addExploreStation
+
+        return routes
 
     def addExploreStation(self, path, request, response):
         return self.addStation(

@@ -1,13 +1,6 @@
 from rich.console import Console
 from rich.prompt import Prompt, Confirm
 
-## Config
-no_config_file = "No config file found at [red]{path}[/red], running setup..."
-plex_token_explainer = """Pomelo requires a [b]Plex token[/b] to connect to your Plex server.
-     To find your Plex token, follow instructions here: https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/
-"""
-advanced_settings = "Update advanced settings?"
-
 
 console = Console()
 
