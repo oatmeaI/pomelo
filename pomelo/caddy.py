@@ -15,9 +15,9 @@ def init_caddy():
     if not os.path.isfile(cert_path) or not os.path.isfile(key_path):
         create_certs()
 
+    # tls "{cert_path}" "{key_path}"
     payload = f"""
 :{caddy_listen_port} {{ 
-    tls "{cert_path}" "{key_path}"
     reverse_proxy localhost:{pomelo_port} {{
         @error status 501 500 502 404
         handle_response @error {{

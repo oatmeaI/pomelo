@@ -29,6 +29,7 @@ def wizard_proxy():
     plex_host = Config.plex_host
     plex_port = Config.plex_port
 
+    # TODO - this crashes the app if Plex isn't ready yet
     # server = createServer()
     # id = server.machineIdentifier
     id = "asdf"

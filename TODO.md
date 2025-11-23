@@ -1,4 +1,14 @@
 # MVP
+- [ ] notes on how to make work with plex outside docker
+    - token, processed machineIdentifier out of plist, into fake prefs.xml
+    - override plex host in config toml
+        host.docker.internal
+        turn off caddy inside container and just use main caddy
+    - tls doesn't work
+    - need to set allowLocalhostOnly
+    
+- [ ] do I need to bother with the certs at all given the new setup?
+- [ ] dynamic settings reload isn't working?
 - [ ] make sure addresses etc in logs are correct
 - [ ] Setup instructions + general docs (incl. docker compose)
 - [ ] Docs for AnyRadios

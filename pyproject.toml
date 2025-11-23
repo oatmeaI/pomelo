@@ -1,7 +1,9 @@
 [project]
 name = "pomelo"
 version = "0.1.0"
-authors = [{name = "Keenan Villani-Holland", email = "keenan@oatmeal.monster"}]
+authors = [
+    { name = "Keenan Villani-Holland", email = "keenan@oatmeal.monster" },
+]
 readme = "README.md"
 
 [project.scripts]
