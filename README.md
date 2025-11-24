@@ -3,8 +3,6 @@
 `pomelo` is a tool that allows you to extend the functionality of your Plex server in almost any way imaginable. `pomelo` runs proxy server that sits between your Plex server and your Plex client, 
 allowing you to intercept & modify requests to, and responses from the Plex server. This allows you to do things like add custom hubs, change what buttons do, how metadata is displayed...or just about anything else.
 
-## TODO: what does it do section w/ screenshots 
-
 ## Installation 
 Pomelo is built to run in a container, as part of a compose stack with Plex Media Server. If you're already running PMS inside a container, adding Pomelo is super easy - just update your `docker-compose.yml` to add Pomelo
 to the stack:
@@ -88,26 +86,29 @@ Adds a new hub to music sections of your library where you can add custom "stati
 
 ##### Station Configurations
 The easiest way to understand station config is probably with an example:
-```yml
+```toml
 [[AnyRadios.stations]]
 name = "Smart Shuffle"                      # [Required] The name of the station shown in the UI.
 key = "smart"                               # [Required] Used in the backend.
 
 [[AnyRadios.stations.sources]]              # Each station can have as many sources as you want.
-filters = { "track.addedAt>>" = "-90d" }    # Filters that restrict whcih tracks will be included in this source. Uses Plex's filter syntax; see here: https://www.plexopedia.com/plex-media-server/api/filter/
+filters = { "track.addedAt>>" = "-90d" }    # Filters that restrict which tracks will be included in this source. Uses Plex's filter syntax; see below.
 chance = 2                                  # [Required] The chance a track from this source will be picked relative to the other sources. In this example, this source is twice as likely as the second source below.
 sort = "addedAt"                            # If a source has a `sort` defined, the first track will be more likely to be added to the queue than the last.
 sort_reverse = true
 sort_weight = 1                             # Determines how much more likely the first track will be than the last.
-# In this example, the most recently added track will be twice as likely than a random track (from the source below); the least recently added track will be equally as likely as a random track.
-# Other tracks in the list will be somewhere in between; for example, if there are three tracks in this source:
-# Track 1: Chance 2
-# Track 2: Change 1.5
-# Track 3: Chance 1
 
 [[AnyRadios.stations.sources]]              # A source with no filters will pick a random assortment of tracks.
 chance = 1
 ```
+
+###### Sorting & Filtering
+See [here](https://www.plexopedia.com/plex-media-server/api/filter/) for a guide to Plex's filtering syntax.
+In this example, the most recently added track will be twice as likely than a random track (from the source below); the least recently added track will be equally as likely as a random track.
+Other tracks in the list will be somewhere in between; for example, if there are three tracks in this source:
+- Track 1: Chance 2
+- Track 2: Change 1.5
+- Track 3: Chance 1
 
 #### ExploreRadio
 The Explore Radio Plugin adds a new Station to your Music library which tries to play a pretty even mix of songs you've rated highly and songs you've never heard before, while maintaining a vibe (using Plex's sonic similarity feature).
