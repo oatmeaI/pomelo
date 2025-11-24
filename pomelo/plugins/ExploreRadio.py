@@ -2,20 +2,21 @@ import random
 import json
 import copy
 
-from plexapi.server import PlayQueue, PlexServer
-from melon import constants
-from melon.config import Config
-from melon.store import store
-from melon.util import bail, forwardRequest, requestToServer
+from plexapi.server import PlayQueue
+from pomelo import constants
+from pomelo.config import Config
+from pomelo.util import bail, createServer, forwardRequest, requestToServer
 
 
 PLUGIN_NAME = "ExploreRadio"
 HIJACK = "hijack"
 STATION_KEY = "explore"
-DEFAULT_CONFIG = {"station_name": "Explore Radio"}
+DEFAULT_CONFIG = {"station_name": "Explore Radio", "enabled_sections": []}
+
 
 def probably(chance):
     return random.random() < chance
+
 
 class Plugin:
     _server = None
@@ -25,8 +26,7 @@ class Plugin:
     favorites = 1
 
     def __init__(self):
-        _config = Config.getPluginSettins(PLUGIN_NAME)
-        self.config = _config if _config else DEFAULT_CONFIG
+        self.config = DEFAULT_CONFIG | Config.getPluginSettings(PLUGIN_NAME)
 
     def setQueueIdForDevice(self, device, queueId):
         self.queues[device] = queueId
@@ -43,28 +43,35 @@ class Plugin:
 
     def server(self):
         if self._server is None:
-            self._server = PlexServer(
-                f"{Config.serverAddress}:{Config.serverPort}", store.token
-            )
+            self._server = createServer()
+
         return self._server
 
-    def paths(self, request):
-        queueId = self.getQueueIdForRequest(request)
-        return {
-            "hubs/sections/1": self.addExploreStation,
-            "playQueues": self.startStation,
-            f"playQueues/{str(queueId)}": self.playQueues,
+    # FIXME: update playqueue when getting small
+    def paths(self):
+        # queueId = self.getQueueIdForRequest(request)
+        # f"playQueues/{str(queueId)}": self.playQueues,
+        sections = self.config["enabled_sections"]
+        if len(sections) < 1:
+            all_sections = self.server().library.sections()
+            sections = [s.key for s in all_sections if s.TYPE == "artist"]
+        routes = {
+            "/playQueues": self.startStation,
         }
+        for section in sections:
+            key = f"/hubs/sections/{section}"
+            routes[key] = self.addExploreStation
 
-    def addExploreStation(self, _, __, response):
-        print("Adding station...")
-        return self.addStation(self.config["station_name"], STATION_KEY, response)
+        return routes
+
+    def addExploreStation(self, path, request, response):
+        return self.addStation(
+            self.config["station_name"], STATION_KEY, path, request, response
+        )
 
     def playQueues(self, path, request, response):
         queueId = str(self.getQueueIdForRequest(request))
-        print("checking queue", queueId, path, self.inflight)
         if queueId in path and not self.inflight:
-            print("checking if we should add to queue")
             self.inflight = True
             try:
                 self.handleQueue(request)
@@ -84,9 +91,8 @@ class Plugin:
             and STATION_KEY in request.args[constants.URI_KEY]
             and HIJACK in request.args[constants.URI_KEY]
         ):
-            print("Starting cool station...")
-            print(store.token)
-            section = self.server().library.section(Config.musicSection)
+            section_id = request.args[constants.URI_KEY].split("/")[-1].split("?")[0]
+            section = self.server().library.sectionByID(int(section_id))
 
             # TODO: pick this in a smarter way
             firstTrack = section.searchTracks(maxresults=1, sort="random")[0]
@@ -108,26 +114,19 @@ class Plugin:
         return response
 
     def handleQueue(self, request):
-        print("adding cool track")
         server = self.server()
         queueId = self.getQueueIdForRequest(request)
         queue = PlayQueue.get(server, queueId)
-        pos = (
-            len(self.tracksByQueue[queueId]) - queue.playQueueSelectedItemOffset
-        )
-        print("pos", pos)
+        pos = len(self.tracksByQueue[queueId]) - queue.playQueueSelectedItemOffset
         while pos < 15:
-            print("pos", pos)
             track = self.tracksByQueue[queueId][-1]
             nextTrack = self.getNextTrack(server, track, queue)
             self.addTrackToQueue(queue, nextTrack)
-            pos = (
-                len(self.tracksByQueue[queueId])
-                - queue.playQueueSelectedItemOffset
-            )
+            pos = len(self.tracksByQueue[queueId]) - queue.playQueueSelectedItemOffset
 
     # TODO: from here down is a real mess
-    def addStation(self, name, key, response):
+    def addStation(self, name, key, path, request, response):
+        section = path.split("/")[-1]
         try:
             j = json.loads(response.content)
             for hub in j["MediaContainer"]["Hub"]:
@@ -135,8 +134,8 @@ class Plugin:
                     hub["size"] = 5
                     first = copy.deepcopy(hub["Metadata"][0])
                     first["title"] = name
-                    first["guid"] = "hijack://station/" + key
-                    first["key"] = "/hijack/stations/" + key
+                    first["guid"] = f"hijack://station/{key}/{section}"
+                    first["key"] = f"/hijack/stations/{key}/{section}"
 
                     hub["Metadata"].insert(0, first)
 
@@ -153,13 +152,9 @@ class Plugin:
         tracks = track.sonicallySimilar(maxDistance=0.4)
         # make an unheard song more likely the more favorites in a row
         rand = random.randint(0, self.favorites)
-        print(queue)
         queueItems = self.tracksByQueue[queue.playQueueID]
-        unheard = True if self.favorites else probably(50/100) 
-        # unheard = probably(50/100) 
-       
-        # unheard = rand < self.favorites
-       
+        unheard = True if self.favorites else probably(50 / 100)
+
         if not unheard:
             self.favorites = True
         else:
@@ -169,7 +164,6 @@ class Plugin:
         # TODO: super dumb
 
         lastThreeAlbums = [track.grandparentTitle for track in queueItems[-3:]]
-        print(lastThreeAlbums)
 
         filtered = list(
             filter(
@@ -179,7 +173,8 @@ class Plugin:
                     if unheard
                     else t.userRating is not None and t.userRating > 0
                 )
-                and t.grandparentTitle not in lastThreeAlbums, # Avoid adding two tracks by the same artist in three songs
+                and t.grandparentTitle
+                not in lastThreeAlbums,  # Avoid adding two tracks by the same artist in three songs
                 tracks,
             )
         )
@@ -195,15 +190,15 @@ class Plugin:
                         if unheard
                         else t.userRating is not None and t.userRating > 0
                     )
-                    and t.grandparentTitle not in lastThreeAlbums, # Avoid adding two tracks by the same artist in three songs
+                    and t.grandparentTitle
+                    not in lastThreeAlbums,  # Avoid adding two tracks by the same artist in three songs
                     tracks,
                 )
             )
 
         if len(filtered) < 1:
             type = "fell through to rando"
-            section = server.library.section(Config.musicSection)
+            section = server.library.section(Config.music_section_title)
             filtered = [section.searchTracks(maxresults=1, sort="random")[0]]
 
-        print(type + ": ", filtered[0])
         return filtered[0]

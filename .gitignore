@@ -1,2 +1,6 @@
 __pycache__
 .DS_Store
+caddy
+dist
+docker-compose.yml
+TODO.md

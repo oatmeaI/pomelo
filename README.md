@@ -1,92 +1,137 @@
-# Melon In The Middle (for Plex) 🐶
-Melon In The Middle (`melon` for short) is a tool that allows you to extend the functionality of your Plex server in almost any way imaginable.
+![Static Badge](https://img.shields.io/badge/made_by_hand-not_ai-blue?style=for-the-badge)
 
-## How?
-`melon` is a proxy server that sits between your Plex server and your Plex client, allowing you to intercept & modify requests to, and responses from the Plex server. This allows you to do things like add custom Stations, change what buttons do or how metadata is displayed...or just about anything else.
+# Pomelo (for Plex) 🐶
 
-## Usage
-Setting up `melon` takes a little bit of work, because we need to trick Plex into always connecting via `melon` instead of connecting directly to the Plex server. There are 3 main steps:
-### 1. Configure a Reverse Proxy to your Plex server
-1. **Set up a reverse proxy to your Plex server:** There are lots of different guides on how to do this floating around - I use [Caddy](https://caddyserver.com/), which is pretty easy to set up.
-2. **Disable Remote Access:** In your Plex server settings, disable Remote Access (don't worry, you'll still be able to access your server remotely)
-3. **Add your reverse proxy to Plex:** In the Network tab, click "Show Advanced", find the "Custom server access URLs" field, and add your reverse proxy URL (this step is probably included in many of the Plex reverse proxy guides out there, if you've done it already then you can skip this step). You may also want to check the `Treat WAN IP As LAN Bandwidth` box on this page - it's not required for `melon` to work though.
-4. **Force Plex to use the reverse proxy even on LAN:** Following the [Plex documentation on changing hidden settings](https://support.plex.tv/articles/201105343-advanced-hidden-server-settings/) to set `allowLocalhostOnly 1` (on my Mac, I ran `defaults write com.plexapp.plexmediaserver allowLocalhostOnly 1`). This tells Plex not to allow LAN connections, forcing your clients to to connect via the reverse proxy over the Internet.
+Pomelo is a tool that allows you to extend the functionality of your Plex server in almost any way imaginable. Pomelo runs proxy server that sits between your Plex server and your Plex client, 
+allowing you to intercept & modify requests to, and responses from the Plex server. This allows you to do things like add custom hubs, change what buttons do, how metadata is displayed...or just about anything else.
 
-At this point, you should be able to use Plex as normal, but all connections will be funneled through your reverse proxy.
+## Installation 
+Pomelo is built to run in a container, as part of a compose stack with Plex Media Server. If you're already running PMS inside a container, adding Pomelo is super easy - just update your `docker-compose.yml` to add Pomelo
+to the stack:
+```yml
+version: "3"
+services:
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - VERSION=docker
+    ports:
+      - 5001:32400            # In case you need to reach the original server for some reason
+    volumes:
+      - /plex:/config
+      - /media/music:/music
+      - /media/movies:/movies
+      - /media/tv:/tv
+    restart: unless-stopped
 
-### 2. Tell your reverse proxy to send traffic to Melon instead of Plex
-1. Update your reverse proxy configuration to send all traffic to `localhost:5200` (the port that `melon` uses) instead of to your Plex server.
-2. Set your proxy to send traffic to Plex if `melon` returns an error.
-This part is a little weird, but not that complicated. My `Caddyfile` looks like this:
+  pomelo:
+    image: oatmealmonster/pomelo:latest
+    environment:
+      - PYTHONUNBUFFERED=1    # Make `print` work
+    ports:
+      - 32400:5500
+    volumes:
+      - /plex:/config         # !!Make this the same as line 14!!
+      - /plex/pomelo:/pomelo  # This can be anywhere - this is where Pomelo will store it's configuration files
+    depends_on:
+      - plex
 ```
-plex.mydomain.com {
-  reverse_proxy localhost:5200 {
-    @error status 500 404
-    handle_response @error {
-      reverse_proxy localhost:32400 
-    }
-  }
-}
-```
-This way, if `melon` gets a request it doesn't want to (or doesn't know how to) handle, we just send it straight through to Plex. This allows us to only mess around with the specific requests we're interested in, and let the actual Plex server handle everything else.
+### A couple things to note:
+- Pomelo _requires_ a volume mapping from the directory on the host machine where the Plex libary is stored, to `/config`.
+- Your Plex Media Server container must not be running networking in host mode; the Pomelo container needs to bind to port 32400.
+- You may want enable the `Treat WAN IP As LAN Bandwidth` setting in the Network tab if you're having trouble with Plex throttling your streams.
 
-At this point, your Plex clients will probably show your server as inaccessible - that's okay, we just need to start up `melon`!
+## Config
+Pomelo stores a `pomelo_config.toml` file in the `/pomelo` volume specified in your `docker-compose.yml`. Most of the options should be left at their defaults 99% of the time, with the exception
+of plugin configuation (see below)
 
-### 3. Almost done - start up Melon In The Middle!
-0. Ensure [Poetry](https://python-poetry.org/) is installed
-1. `git clone` this repo
-2. Run `poetry install` in the project root
-3. Run `poetry start`
-(In the future, we'll distribute an actual binary and you won't need to clone the repo or use Poetry...but for now...)
-If everything worked, your Plex clients should be able to access your server again, and you should see a new Station named "Explore Radio" in the Music section of your library.
-That station is created by the Explore Station plugin...
+|Option name|What it does|Default value|
+|-----------|------------|-------------|
+|`caddy_admin_url`|Specifies the admin url for the [Caddy](https://caddyserver.com/) server that Pomelo runs. Should be left at default.|`http://localhost:2019`|
+|`caddy_listen_port`|The port the Caddy server should listen on. Should be left at default.|`5500`|
+|`plex_host`|The url to the Plex server. Should only be changed if you know what you're doing.|`plex`|
+|`plex_port`|The port the Plex server is running on. Should only be changed if you know what you're doing.|`32400`|
+|`plex_token`|An access token for requests to your Plex server. Pomelo should be able to populate this automatically; if you run into issues you can set it yourself: [Finding X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/) |``|
+|`pomelo_port`|The port (on the container) that Pomelo runs on. You shouldn't need to change this, but if you do, you'll need to update your `docker-compose.yml` accordingly.|`32400`|
+|`enabled_plugins`|A list of plugins that Pomelo should load & run. Feel free to edit & update this as you wish.|`["pomelo.plugins.ExploreRadio", "pomelo.plugins.AnyRadios"]`|
 
 ## Plugins
-Extensions to Plex functionality served by Melon are handled by plugins. Currently there is only one plugin - Explore Radio - and all plugins must be bundled with Melon. In the future, there will be more plugins which over more functionlality, and a way to install plugins not bundled with Melon (see the Roadmap below).
+Extensions to Plex functionality served by Pomelo are handled by plugins. Pomelo currently comes bundled with three plugins, and can load external plugins as well.
+
+### External Plugins
+External plugins can be placed in `/pomelo/plugins`, and added to the `enabled_plugins` list in `pomelo_config.toml`.
+
+### Plugin Config
+Some plugins offer their own config options. These can be specified under `[{Plugin Name}]` in `pomelo_config.toml`:
+```toml
+[ExploreRadio]
+station_name = "Cool Radio"
+```
+Available options for each builtin plugin are listed in the documentation for each plugin.
+
+### Builtin Plugins
+
+### AnyRadios
+Adds a new hub to music sections of your library where you can add custom "stations" that shuffle your music collection according to logic you define.
+
+#### Options
+|Option name|What it does|Default value|
+|-----------|------------|-------------|
+|`length`|How many tracks should be added to the queue when a station is started. Larger numbers will make the station play for longer, but take longer to start up.|`100`|
+|`enabled_sections`|Library sections where the Pomelo Stations should be shown. If empty, it will be shown in every music section in your library.|`[]`|
+|`hub_title`|The title of the hub where your custom stations are show.|`Pomelo Stations`|
+|`stations`|A list of station definitions. See below for more.|See below.|
+
+#### Station Configurations
+The easiest way to understand station config is probably with an example:
+```toml
+[[AnyRadios.stations]]
+name = "Smart Shuffle"                      # [Required] The name of the station shown in the UI.
+key = "smart"                               # [Required] Used in the backend.
+
+[[AnyRadios.stations.sources]]              # Each station can have as many sources as you want.
+filters = { "track.addedAt>>" = "-90d" }    # Filters that restrict which tracks will be included in this source. Uses Plex's filter syntax; see below.
+chance = 2                                  # [Required] The chance a track from this source will be picked relative to the other sources. In this example, this source is twice as likely as the second source below.
+sort = "addedAt"                            # If a source has a `sort` defined, the first track will be more likely to be added to the queue than the last.
+sort_reverse = true
+sort_weight = 1                             # Determines how much more likely the first track will be than the last.
+
+[[AnyRadios.stations.sources]]              # A source with no filters will pick a random assortment of tracks.
+chance = 1
+```
+
+##### Sorting & Filtering
+See [here](https://www.plexopedia.com/plex-media-server/api/filter/) for a guide to Plex's filtering syntax.
+In this example, the most recently added track will be twice as likely than a random track (from the source below); the least recently added track will be equally as likely as a random track.
+Other tracks in the list will be somewhere in between; for example, if there are three tracks in this source:
+- Track 1: Chance 2
+- Track 2: Change 1.5
+- Track 3: Chance 1
 
 ### ExploreRadio
-`ExploreRadio` is the reason I created Melon. The Explore Radio Plugin adds a new Station to your Music library which tries to play a pretty even mix of songs you've rated highly and songs you've never heard before, while maintaining a vibe (using Plex's sonic similarity feature).
+The Explore Radio Plugin adds a new Station to your Music library which tries to play a pretty even mix of songs you've rated highly and songs you've never heard before, while maintaining a vibe (using Plex's sonic similarity feature).
 
 #### Options
 `ExploreRadio` offers one option - `station_name` - which determines what the Explore station will be named in the UI.
-
-## Config
-Melon In the Middle usually does not require any configuration, but a config file is available in case you want to tweak anything.
-The file lives at the `user_config_dir` specified by [platformdirs](https://pypi.org/project/platformdirs/) - on macOS, it's `~/Library/Application Support/melon/config.toml`.
-The available options and their defaults are:
 |Option name|What it does|Default value|
 |-----------|------------|-------------|
-|`serverAddress`|The address of your Plex server.|`http://127.0.0.`|
-|`serverPort`|The port your Plex server is listening on.|`32400`|
-|`musicSection`|The name of your Music library on your Plex server|`Music`|
-|`debug`|Turns on some extra logging and hot reloading|`False`|
-|`enabled_plugins`|A list of bundled plugins to that should be enabled|`["ExploreRadio"]`|
-|`port`|The port that `melon` should listen on|`5200`|
+|`station_name`|The name of the station in the Plex UI|`Explore Radio`|
+|`enabled_sections`|Library sections where the Pomelo Stations should be shown. If empty, it will be shown in every music section in your library.|`[]`|
 
-### Plugin Config
-Some plugins offer their own config options. These can be specified under `[plugin_config.{Plugin Name}]` in the `config.toml`
+### BetterTrackRadio
+BetterTrackRadio makes the radios started from a track (only possible on Plexamp) use similar logic to the ExploreRadio plugin.
 
-### Example config.toml:
-(This is the config that I use)
-```toml
-enabled_plugins = ["ExploreRadio"]
+## Thanks
+Huge thanks @cchaz003 for all the help testing this, and for the idea to use containers!
 
-[plugin_config.ExploreRadio]
-station_name = "Cool Guys Radio"
-```
+## Prior Art
+- [Replex](https://github.com/lostb1t/replex): A similar project; where I originally got the idea of using a proxy to extend Plex.
+- [Psueplex](https://github.com/lufinkey/pseuplex): Another similar project; written in TypeScript and doesn't use containers.
 
-## Roadmap
-- [ ] 2nd bundled plugin - better Track Radio
-- [ ] Plugin developer documentation
-- [ ] Installing un-bundled plugins
-- [ ] An actual build process & binary distribution
-- [ ] Better log messages / log to a file
-- [ ] Better & prettier documentation
-
-## What's with the name?
-- It's a **man in the middle** proxy.
-- Plex is an app for watching TV; **Malcolm In The Middle** is a famous TV show.
-- **Melon** is my dog's name (and she likes to be in the middle of the bed)
 
 ![IMG_5578](https://github.com/user-attachments/assets/4e7d842e-55a8-4bbc-a0a5-e0278b5de77b)
 
