@@ -73,12 +73,10 @@ station_name = "Cool Radio"
 ```
 Available options for each builtin plugin are listed in the documentation for each plugin.
 
-### Builtin Plugins
-
-### AnyRadios
+## AnyRadios
 Adds a new hub to music sections of your library where you can add custom "stations" that shuffle your music collection according to logic you define.
 
-#### Options
+### Options
 |Option name|What it does|Default value|
 |-----------|------------|-------------|
 |`length`|How many tracks should be added to the queue when a station is started. Larger numbers will make the station play for longer, but take longer to start up.|`100`|
@@ -86,7 +84,7 @@ Adds a new hub to music sections of your library where you can add custom "stati
 |`hub_title`|The title of the hub where your custom stations are show.|`Pomelo Stations`|
 |`stations`|A list of station definitions. See below for more.|See below.|
 
-#### Station Configurations
+### Station Configurations
 The easiest way to understand station config is probably with an example:
 ```toml
 [[AnyRadios.stations]]
@@ -104,29 +102,30 @@ sort_weight = 1                             # Determines how much more likely th
 chance = 1
 ```
 
-##### Sorting & Filtering
+#### Sorting & Filtering
 See [here](https://www.plexopedia.com/plex-media-server/api/filter/) for a guide to Plex's filtering syntax.
+
 In this example, the most recently added track will be twice as likely than a random track (from the source below); the least recently added track will be equally as likely as a random track.
 Other tracks in the list will be somewhere in between; for example, if there are three tracks in this source:
 - Track 1: Chance 2
 - Track 2: Change 1.5
 - Track 3: Chance 1
 
-### ExploreRadio
+## ExploreRadio
 The Explore Radio Plugin adds a new Station to your Music library which tries to play a pretty even mix of songs you've rated highly and songs you've never heard before, while maintaining a vibe (using Plex's sonic similarity feature).
 
-#### Options
+### Options
 `ExploreRadio` offers one option - `station_name` - which determines what the Explore station will be named in the UI.
 |Option name|What it does|Default value|
 |-----------|------------|-------------|
 |`station_name`|The name of the station in the Plex UI|`Explore Radio`|
 |`enabled_sections`|Library sections where the Pomelo Stations should be shown. If empty, it will be shown in every music section in your library.|`[]`|
 
-### BetterTrackRadio
+## BetterTrackRadio
 BetterTrackRadio makes the radios started from a track (only possible on Plexamp) use similar logic to the ExploreRadio plugin.
 
 ## Thanks
-Huge thanks @cchaz003 for all the help testing this, and for the idea to use containers!
+Huge thanks [@cchaz003](https://github.com/cchaz003) for all the help testing this, and for the idea to use containers!
 
 ## Prior Art
 - [Replex](https://github.com/lostb1t/replex): A similar project; where I originally got the idea of using a proxy to extend Plex.
