@@ -3,7 +3,9 @@
 `pomelo` is a tool that allows you to extend the functionality of your Plex server in almost any way imaginable. `pomelo` runs proxy server that sits between your Plex server and your Plex client, 
 allowing you to intercept & modify requests to, and responses from the Plex server. This allows you to do things like add custom hubs, change what buttons do, how metadata is displayed...or just about anything else.
 
-## How?
+## TODO: what does it do section w/ screenshots 
+
+## Installation 
 Pomelo is built to run in a container, as part of a compose stack with Plex Media Server. If you're already running PMS inside a container, adding Pomelo is super easy - just update your `docker-compose.yml` to add Pomelo
 to the stack:
 ```yml

@@ -1,3 +1,4 @@
+import time
 import requests
 from flask import abort
 from plexapi.server import PlexServer
@@ -26,9 +27,15 @@ def buildResponse(response):
 
 
 def createServer():
-    return PlexServer(
-        f"http://{Config.plex_host}:{Config.plex_port}", Config.plex_token
-    )
+    s = None
+    while s is None:
+        try:
+            s = PlexServer(
+                f"http://{Config.plex_host}:{Config.plex_port}", Config.plex_token
+            )
+        except Exception as e:
+            time.sleep(1)
+    return s
 
 
 def bail():

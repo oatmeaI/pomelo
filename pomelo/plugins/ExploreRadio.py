@@ -11,7 +11,7 @@ from pomelo.util import bail, createServer, forwardRequest, requestToServer
 PLUGIN_NAME = "ExploreRadio"
 HIJACK = "hijack"
 STATION_KEY = "explore"
-DEFAULT_CONFIG = {"station_name": "Explore Radio", "enabled_hubs": [1]}
+DEFAULT_CONFIG = {"station_name": "Explore Radio", "enabled_sections": []}
 
 
 def probably(chance):
@@ -51,12 +51,15 @@ class Plugin:
     def paths(self):
         # queueId = self.getQueueIdForRequest(request)
         # f"playQueues/{str(queueId)}": self.playQueues,
-        hubs = self.config["enabled_hubs"]
+        sections = self.config["enabled_sections"]
+        if len(sections) < 1:
+            all_sections = self.server().library.sections()
+            sections = [s.key for s in all_sections if s.TYPE == "artist"]
         routes = {
             "/playQueues": self.startStation,
         }
-        for hub in hubs:
-            key = f"/hubs/sections/{hub}"
+        for section in sections:
+            key = f"/hubs/sections/{section}"
             routes[key] = self.addExploreStation
 
         return routes
@@ -88,7 +91,8 @@ class Plugin:
             and STATION_KEY in request.args[constants.URI_KEY]
             and HIJACK in request.args[constants.URI_KEY]
         ):
-            section = self.server().library.section(Config.music_section_title)
+            section_id = request.args[constants.URI_KEY].split("/")[-1].split("?")[0]
+            section = self.server().library.sectionByID(int(section_id))
 
             # TODO: pick this in a smarter way
             firstTrack = section.searchTracks(maxresults=1, sort="random")[0]
@@ -122,6 +126,7 @@ class Plugin:
 
     # TODO: from here down is a real mess
     def addStation(self, name, key, path, request, response):
+        section = path.split("/")[-1]
         try:
             j = json.loads(response.content)
             for hub in j["MediaContainer"]["Hub"]:
@@ -129,8 +134,8 @@ class Plugin:
                     hub["size"] = 5
                     first = copy.deepcopy(hub["Metadata"][0])
                     first["title"] = name
-                    first["guid"] = "hijack://station/" + key
-                    first["key"] = "/hijack/stations/" + key
+                    first["guid"] = f"hijack://station/{key}/{section}"
+                    first["key"] = f"/hijack/stations/{key}/{section}"
 
                     hub["Metadata"].insert(0, first)
 

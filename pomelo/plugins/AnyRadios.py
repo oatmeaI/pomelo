@@ -18,7 +18,7 @@ FIELD_MINIMUMS = {
 PLUGIN_NAME = "AnyRadios"
 DEFAULT_CONFIG = {
     "length": 100,
-    "enabled_hubs": [1],
+    "enabled_sections": [],
     "stations": [
         {
             "name": "Smart Shuffle",
@@ -58,19 +58,23 @@ class Plugin:
         return self._server
 
     def paths(self):
-        hubs = self.config["enabled_hubs"]
+        sections = self.config["enabled_sections"]
+        if len(sections) < 1:
+            all_sections = self.server().library.sections()
+            sections = [s.key for s in all_sections if s.TYPE == "artist"]
+
         routes = {
             "/anyradios": self.returnStations,
             "/playQueues": self.startStation,
         }
-        for hub in hubs:
-            key = f"/hubs/sections/{hub}"
+        for section in sections:
+            key = f"/hubs/sections/{section}"
             routes[key] = self.addStations
 
         return routes
 
     def returnStations(self, path, request, response):
-        items = self.buildStations()
+        items = self.buildStations(path)
 
         content = json.loads(response.content)
         content["MediaContainer"]["Metadata"] = items
@@ -80,14 +84,16 @@ class Plugin:
         response._content = json.dumps(content)
         return response
 
-    def buildStations(self):
+    def buildStations(self, path):
+        section = path.split("/")[-1]
         stations = self.config["stations"]
         items = []
+
         for station in stations:
             key = station["key"]
             item = {
-                "key": f"/hijack/stations/{key}",
-                "guid": f"hijack://station/{key}",
+                "key": f"/hijack/stations/{key}/{section}",
+                "guid": f"hijack://station/{key}/{section}",
                 "type": "playlist",
                 "title": station["name"],
                 "smart": True,
@@ -111,7 +117,7 @@ class Plugin:
             "Metadata": [],
         }
 
-        items = self.buildStations()
+        items = self.buildStations(path)
         hub["Metadata"] += items
         hub["size"] += len(items)
 
@@ -122,7 +128,7 @@ class Plugin:
         response._content = json.dumps(content)
         return response
 
-    def startStation(self, _, request, response):
+    def startStation(self, path, request, response):
         if constants.URI_KEY not in request.args:
             return response
 
@@ -140,7 +146,8 @@ class Plugin:
 
         length = self.config["length"]
         sources = station["sources"]
-        section = self.server().library.sectionByID(Config.music_section_id)
+        section_id = request.args[constants.URI_KEY].split("/")[-1].split("?")[0]
+        section = self.server().library.sectionByID(int(section_id))
 
         pool = []
         weights = []
