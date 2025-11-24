@@ -88,7 +88,7 @@ Adds a new hub to music sections of your library where you can add custom "stati
 
 ##### Station Configurations
 The easiest way to understand station config is probably with an example:
-```yml
+```toml
 [[AnyRadios.stations]]
 name = "Smart Shuffle"                      # [Required] The name of the station shown in the UI.
 key = "smart"                               # [Required] Used in the backend.
