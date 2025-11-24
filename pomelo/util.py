@@ -1,5 +1,6 @@
 import time
 import requests
+import rich
 from flask import abort
 from plexapi.server import PlexServer
 from pomelo.constants import TOKEN_KEY
@@ -65,7 +66,8 @@ def requestToServer(endpoint, _headers):
 
 def forwardRequest(request, path):
     query_string = request.query_string.decode()
-    remote_url = f"http://{Config.plex_host}:{Config.plex_port}/{path}?{query_string}"
+    # rich.inspect(request)
+    remote_url = f"http://{Config.plex_host}:{Config.plex_port}{request.full_path}"
     req = requests.Request(
         method=request.method,
         url=remote_url,

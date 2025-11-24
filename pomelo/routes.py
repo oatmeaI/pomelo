@@ -5,7 +5,7 @@ from pomelo.config import Config
 
 
 def routeHandler(handlers, route):
-    def inner(*args):
+    def inner(*args, **kwargs):
         try:
             # We can't watch filesystem events from inside a container, so
             # we just refresh the config at every request. Not super efficient,
@@ -16,7 +16,7 @@ def routeHandler(handlers, route):
 
             for handler in handlers:
                 interceptedResponse = handler(
-                    *args, route, request, interceptedResponse
+                    *args, route, request, interceptedResponse, **kwargs
                 )
 
             return buildResponse(interceptedResponse)
