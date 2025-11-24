@@ -19,6 +19,8 @@ services:
 
   pomelo:
     image: oatmealmonster/pomelo:latest
+    environment:
+      - PYTHONUNBUFFERED=1    # Make `print` work
     ports:
       - 32400:5500
     volumes:

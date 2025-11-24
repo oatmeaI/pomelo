@@ -74,7 +74,14 @@ class Plugin:
         return routes
 
     def returnStations(self, path, request, response):
-        items = self.buildStations(path)
+        sections = self.config["enabled_sections"]
+        if len(sections) < 1:
+            all_sections = self.server().library.sections()
+            sections = [s.key for s in all_sections if s.TYPE == "artist"]
+
+        items = []
+        for section in sections:
+            items += self.buildStations(section)
 
         content = json.loads(response.content)
         content["MediaContainer"]["Metadata"] = items
@@ -84,8 +91,7 @@ class Plugin:
         response._content = json.dumps(content)
         return response
 
-    def buildStations(self, path):
-        section = path.split("/")[-1]
+    def buildStations(self, section):
         stations = self.config["stations"]
         items = []
 
@@ -117,7 +123,8 @@ class Plugin:
             "Metadata": [],
         }
 
-        items = self.buildStations(path)
+        section = path.split("/")[-1]
+        items = self.buildStations(section)
         hub["Metadata"] += items
         hub["size"] += len(items)
 
