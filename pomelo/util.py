@@ -16,6 +16,9 @@ excluded_headers = [
 
 
 def buildResponse(response):
+    if type(response) is dict:
+        return (response, 200, [])
+
     headers = [
         (k, v) for k, v in response.headers.items() if k.lower() not in excluded_headers
     ]
@@ -65,8 +68,6 @@ def requestToServer(endpoint, _headers):
 
 
 def forwardRequest(request, path):
-    query_string = request.query_string.decode()
-    # rich.inspect(request)
     remote_url = f"http://{Config.plex_host}:{Config.plex_port}{request.full_path}"
     req = requests.Request(
         method=request.method,
