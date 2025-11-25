@@ -94,7 +94,7 @@ station_name = "Cool Radio"
 ```
 Available options for each builtin plugin are listed in the documentation for each plugin.
 
-### Explore Radio
+## Explore Radio
 - `pomelo.plugins.ExploreRadio`
 
 Explore Radio adds a new Station to your Music library which tries to play a pretty even mix of songs you've rated highly and songs you've never heard before, while maintaining a vibe (using Plex's sonic similarity feature).
@@ -105,12 +105,12 @@ Explore Radio adds a new Station to your Music library which tries to play a pre
 |`station_name`|The name of the station in the Plex UI|`Explore Radio`|
 |`enabled_sections`|Library sections where the Pomelo Stations should be shown. If empty, it will be shown in every music section in your library.|`[]`|
 
-### Better Track Radio
+## Better Track Radio
 - `pomelo.plugins.BetterTrackRadio`
 
 Better Track Radio makes the radios started from a track (only possible on Plexamp) use similar logic to the Explore Radio plugin.
 
-### AnyRadios
+## AnyRadios
 - `pomelo.plugins.AnyRadios`
 
 Adds a new hub to music sections of your library where you can add custom "stations" that shuffle your music collection according to logic you define.
@@ -156,6 +156,7 @@ Huge thanks [@cchaz003](https://github.com/cchaz003) for all the help testing th
 ## Prior Art
 - [Replex](https://github.com/lostb1t/replex): A similar project; where I originally got the idea of using a proxy to extend Plex.
 - [Psueplex](https://github.com/lufinkey/pseuplex): Another similar project; written in TypeScript and doesn't use containers.
+- [Python-PlexAPI](https://python-plexapi.readthedocs.io/en/latest/): Pomelo uses this library for communication with the Plex server; this project would be impossible without it!
 
 
 ![IMG_5578](https://github.com/user-attachments/assets/4e7d842e-55a8-4bbc-a0a5-e0278b5de77b)
