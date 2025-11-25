@@ -26,6 +26,7 @@ services:
   plex:
     image: lscr.io/linuxserver/plex:latest
     container_name: plex
+    # NOTE: You MUST remove `network_mode: host` from the plex service in order for Pomelo to work.
     environment:
       - PUID=1000
       - PGID=1000
@@ -47,15 +48,15 @@ services:
     ports:
       - 32400:5500
     volumes:
-      - /plex:/config         # !!Make this the same as line 14!!
+      - /plex:/config         # !!Make this the same as the /config volume in the plex service!!
       - /plex/pomelo:/pomelo  # This can be anywhere - this is where Pomelo will store it's configuration files
     depends_on:
       - plex
 ```
 #### A couple things to note:
-- Pomelo _requires_ a volume mapping from the directory on the host machine where the Plex libary is stored, to `/config`.
-- Your Plex Media Server container must not be running networking in host mode; the Pomelo container needs to bind to port 32400.
-- You may want enable the `Treat WAN IP As LAN Bandwidth` setting in the Network tab if you're having trouble with Plex throttling your streams.
+- Your Plex Media Server container must _not_ use `network_mode: host`; the Pomelo container needs to bind to port 32400.
+- Pomelo _requires_ a volume mapping from the directory on the host machine where the Plex libary is stored to `/config`.
+- You may want enable the `Treat WAN IP As LAN Bandwidth` setting in the Network tab of the Plex Media Server settings if you're having trouble with Plex throttling streams.
 
 ## Configuration
 Pomelo stores a `pomelo_config.toml` file in the `/pomelo` volume specified in your `docker-compose.yml`. Most of the options should be left at their defaults 99% of the time, with the exception
