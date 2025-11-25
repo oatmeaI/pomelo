@@ -133,7 +133,7 @@ See [here](https://www.plexopedia.com/plex-media-server/api/filter/) for a guide
 In this example, the most recently added track will be twice as likely than a random track (from the source below); the least recently added track will be equally as likely as a random track.
 Other tracks in the list will be somewhere in between; for example, if there are three tracks in this source:
 - Track 1: Chance 2
-- Track 2: Change 1.5
+- Track 2: Chance 1.5
 - Track 3: Chance 1
 
 ## Thanks
