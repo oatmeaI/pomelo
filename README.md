@@ -1,14 +1,22 @@
-![Static Badge](https://img.shields.io/badge/made_by_hand-not_ai-blue?style=for-the-badge)
-
 # Pomelo (for Plex) 🐶
 
 Pomelo is a tool that allows you to extend the functionality of your Plex server. Pomelo runs a proxy server that sits between your Plex server and your Plex client, 
-and intercepts & modifies communication with the Plex server. This allows you to do things like add custom hubs, change what buttons do, how metadata is displayed...or just about anything else.
+and intercepts & modifies communication with the Plex server. This allows you to do things like add custom hubs, change what buttons do, how metadata is displayed...or just about anything else. 
 
 <p align="center">
 <img width="925" alt="image" src="https://github.com/user-attachments/assets/63afe4e3-e1e8-4445-9594-f3403845a6bc" />
 <img width="925" height="134" alt="image" src="https://github.com/user-attachments/assets/722efc05-0a26-4fae-89f7-cd5b481dac22" />
 </p>
+
+## Contents
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Plugins](#plugins)
+  - [Explore Radio](#explore-radio-pomelopluginsexploreradio)
+  - [Better Track Radio](#better-track-radio-pomelopluginsbettertrackradio)
+  - [AnyRadios](#anyradios-pomelopluginsanyradios)
+- [Thanks](#thanks)
+- [Prior Art](#prior-art)
 
 ## Installation 
 Pomelo is built to run in a container, as part of a compose stack with Plex Media Server. If you're already running PMS inside a container, adding Pomelo is super easy - just update your `docker-compose.yml` to add Pomelo
@@ -49,7 +57,7 @@ services:
 - Your Plex Media Server container must not be running networking in host mode; the Pomelo container needs to bind to port 32400.
 - You may want enable the `Treat WAN IP As LAN Bandwidth` setting in the Network tab if you're having trouble with Plex throttling your streams.
 
-## Config
+## Configuration
 Pomelo stores a `pomelo_config.toml` file in the `/pomelo` volume specified in your `docker-compose.yml`. Most of the options should be left at their defaults 99% of the time, with the exception
 of plugin configuation (see below)
 
@@ -138,3 +146,4 @@ Huge thanks [@cchaz003](https://github.com/cchaz003) for all the help testing th
 
 ![IMG_5578](https://github.com/user-attachments/assets/4e7d842e-55a8-4bbc-a0a5-e0278b5de77b)
 
+![Static Badge](https://img.shields.io/badge/made_by_hand-not_ai-blue?style=for-the-badge)
