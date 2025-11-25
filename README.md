@@ -1,11 +1,19 @@
 # Pomelo (for Plex) 🐶
 
-Pomelo is a tool that allows you to extend the functionality of your Plex server. Pomelo runs a proxy server that sits between your Plex server and your Plex client, 
-and intercepts & modifies communication with the Plex server. This allows you to do things like add custom hubs, change what buttons do, how metadata is displayed...or just about anything else. 
+Pomelo is a tool that lets you use Plugins extend or modify your Plex server's functionality, by intercepting and modifying communication between Plex players and your server.
 
+Pomelo lets you do all kinds of stuff to your sever - like **adding or customizing Hubs**:
 <p align="center">
 <img width="925" alt="image" src="https://github.com/user-attachments/assets/63afe4e3-e1e8-4445-9594-f3403845a6bc" />
+</p>
+
+Or **adding custom Stations**:
+<p align="center">
 <img width="925" height="134" alt="image" src="https://github.com/user-attachments/assets/722efc05-0a26-4fae-89f7-cd5b481dac22" />
+</p>
+
+<p align="center">
+[more examples to come, as I build them!]
 </p>
 
 ## Contents
