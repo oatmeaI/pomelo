@@ -88,10 +88,9 @@ Available options for each builtin plugin are listed in the documentation for ea
 ## Explore Radio
 - `pomelo.plugins.ExploreRadio`
 
-The Explore Radio Plugin adds a new Station to your Music library which tries to play a pretty even mix of songs you've rated highly and songs you've never heard before, while maintaining a vibe (using Plex's sonic similarity feature).
+Explore Radio adds a new Station to your Music library which tries to play a pretty even mix of songs you've rated highly and songs you've never heard before, while maintaining a vibe (using Plex's sonic similarity feature).
 
 ### Options
-`ExploreRadio` offers one option - `station_name` - which determines what the Explore station will be named in the UI.
 |Option name|What it does|Default value|
 |-----------|------------|-------------|
 |`station_name`|The name of the station in the Plex UI|`Explore Radio`|
@@ -100,7 +99,7 @@ The Explore Radio Plugin adds a new Station to your Music library which tries to
 ## Better Track Radio
 - `pomelo.plugins.BetterTrackRadio`
 
-BetterTrackRadio makes the radios started from a track (only possible on Plexamp) use similar logic to the ExploreRadio plugin.
+Better Track Radio makes the radios started from a track (only possible on Plexamp) use similar logic to the Explore Radio plugin.
 
 ## AnyRadios
 - `pomelo.plugins.AnyRadios`
