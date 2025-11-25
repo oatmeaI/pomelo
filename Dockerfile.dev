@@ -1,0 +1,17 @@
+FROM python:latest
+
+
+RUN apt update
+RUN apt --assume-yes install caddy pipx
+
+RUN pipx install poetry
+RUN pipx ensurepath
+
+ENV PATH="$PATH:/root/.local/bin"
+
+COPY ./pyproject.toml /code/pomelo/pyproject.toml
+COPY ./README.md /code/pomelo/README.md
+WORKDIR /code/pomelo
+
+# RUN poetry install
+CMD caddy start ; poetry install && poetry run start_dev
