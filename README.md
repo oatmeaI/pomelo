@@ -2,18 +2,18 @@
 
 # Pomelo (for Plex) 🐶
 
-Pomelo is a tool that allows you to extend the functionality of your Plex server in almost any way imaginable. Pomelo runs proxy server that sits between your Plex server and your Plex client, 
-allowing you to intercept & modify requests to, and responses from the Plex server. This allows you to do things like add custom hubs, change what buttons do, how metadata is displayed...or just about anything else.
+Pomelo is a tool that allows you to extend the functionality of your Plex server. Pomelo runs a proxy server that sits between your Plex server and your Plex client, 
+and intercepts & modifies communication with the Plex server. This allows you to do things like add custom hubs, change what buttons do, how metadata is displayed...or just about anything else.
 
-<img width="1020" height="365" alt="image" src="https://github.com/user-attachments/assets/63afe4e3-e1e8-4445-9594-f3403845a6bc" />
+<p align="center">
+<img width="925" alt="image" src="https://github.com/user-attachments/assets/63afe4e3-e1e8-4445-9594-f3403845a6bc" />
 <img width="925" height="134" alt="image" src="https://github.com/user-attachments/assets/722efc05-0a26-4fae-89f7-cd5b481dac22" />
-
+</p>
 
 ## Installation 
 Pomelo is built to run in a container, as part of a compose stack with Plex Media Server. If you're already running PMS inside a container, adding Pomelo is super easy - just update your `docker-compose.yml` to add Pomelo
 to the stack:
 ```yml
-version: "3"
 services:
   plex:
     image: lscr.io/linuxserver/plex:latest
@@ -44,7 +44,7 @@ services:
     depends_on:
       - plex
 ```
-### A couple things to note:
+#### A couple things to note:
 - Pomelo _requires_ a volume mapping from the directory on the host machine where the Plex libary is stored, to `/config`.
 - Your Plex Media Server container must not be running networking in host mode; the Pomelo container needs to bind to port 32400.
 - You may want enable the `Treat WAN IP As LAN Bandwidth` setting in the Network tab if you're having trouble with Plex throttling your streams.
@@ -77,7 +77,20 @@ station_name = "Cool Radio"
 ```
 Available options for each builtin plugin are listed in the documentation for each plugin.
 
-## AnyRadios
+## Explore Radio (pomelo.plugins.ExploreRadio)
+The Explore Radio Plugin adds a new Station to your Music library which tries to play a pretty even mix of songs you've rated highly and songs you've never heard before, while maintaining a vibe (using Plex's sonic similarity feature).
+
+### Options
+`ExploreRadio` offers one option - `station_name` - which determines what the Explore station will be named in the UI.
+|Option name|What it does|Default value|
+|-----------|------------|-------------|
+|`station_name`|The name of the station in the Plex UI|`Explore Radio`|
+|`enabled_sections`|Library sections where the Pomelo Stations should be shown. If empty, it will be shown in every music section in your library.|`[]`|
+
+## Better Track Radio (pomelo.plugins.BetterTrackRadio)
+BetterTrackRadio makes the radios started from a track (only possible on Plexamp) use similar logic to the ExploreRadio plugin.
+
+## AnyRadios (pomelo.plugins.AnyRadios)
 Adds a new hub to music sections of your library where you can add custom "stations" that shuffle your music collection according to logic you define.
 
 ### Options
@@ -114,19 +127,6 @@ Other tracks in the list will be somewhere in between; for example, if there are
 - Track 1: Chance 2
 - Track 2: Change 1.5
 - Track 3: Chance 1
-
-## ExploreRadio
-The Explore Radio Plugin adds a new Station to your Music library which tries to play a pretty even mix of songs you've rated highly and songs you've never heard before, while maintaining a vibe (using Plex's sonic similarity feature).
-
-### Options
-`ExploreRadio` offers one option - `station_name` - which determines what the Explore station will be named in the UI.
-|Option name|What it does|Default value|
-|-----------|------------|-------------|
-|`station_name`|The name of the station in the Plex UI|`Explore Radio`|
-|`enabled_sections`|Library sections where the Pomelo Stations should be shown. If empty, it will be shown in every music section in your library.|`[]`|
-
-## BetterTrackRadio
-BetterTrackRadio makes the radios started from a track (only possible on Plexamp) use similar logic to the ExploreRadio plugin.
 
 ## Thanks
 Huge thanks [@cchaz003](https://github.com/cchaz003) for all the help testing this, and for the idea to use containers!
