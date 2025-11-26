@@ -17,7 +17,6 @@ def init_caddy():
 
     payload = f"""
 :{caddy_listen_port} {{ 
-    tls "{cert_path}" "{key_path}"
     reverse_proxy localhost:{pomelo_port} {{
         @error status 501 500 502 404
         handle_response @error {{

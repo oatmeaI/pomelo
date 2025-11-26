@@ -20,6 +20,7 @@ services:
       dockerfile: Dockerfile.dev
     ports:
       - 32400:5500
+      - 32401:5500
     environment:
       - PYTHONUNBUFFERED=1                  # Make `print` work
     volumes:

@@ -19,6 +19,7 @@ tomli-w = "^1.2.0"
 watchdog = "^6.0.0"
 rich = "^14.2.0"
 xmltodict = "^1.0.2"
+yt-dlp = "^2025.11.12"
 
 [tool.poetry.scripts]
 start = "pomelo.main:start"

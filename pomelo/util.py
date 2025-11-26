@@ -16,9 +16,14 @@ excluded_headers = [
 
 
 def buildResponse(response):
+    if type(response) is tuple:
+        return response
     if type(response) is dict:
-        return (response, 200, [])
-
+        return (
+            response,
+            200,
+            [("access-control-allow-origin", "*")],  # TODO
+        )
     headers = [
         (k, v) for k, v in response.headers.items() if k.lower() not in excluded_headers
     ]

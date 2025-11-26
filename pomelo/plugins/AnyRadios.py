@@ -1,11 +1,12 @@
-import json
 import datetime
+import json
 from random import choices, shuffle
 
 from plexapi.server import PlayQueue
 
-from pomelo.config import Config
+from pomelo.BasePlugin import BasePlugin
 from pomelo import constants
+from pomelo.config import Config
 from pomelo.util import createServer, requestToServer
 
 # Anything not listed here will default to 0
@@ -16,51 +17,41 @@ FIELD_MINIMUMS = {
 }
 
 PLUGIN_NAME = "AnyRadios"
-DEFAULT_CONFIG = {
-    "length": 100,
-    "enabled_sections": [],
-    "stations": [
-        {
-            "name": "Smart Shuffle",
-            "key": "shuffle",
-            "sources": [
-                {
-                    "name": "random",
-                    "filters": {},
-                    "sort": "userRating",
-                    "sort_weight": 1,
-                    "sort_reverse": False,
-                    "chance": 2,
-                },
-                {
-                    "name": "new",
-                    "filters": {"track.addedAt>>": "-30d"},
-                    "chance": 2,
-                },
-            ],
-        }
-    ],
-    "hub_title": "Pomelo Stations",
-}
 
 
-class Plugin:
-    _server = None
+class Plugin(BasePlugin):
+    DEFAULT_CONFIG = {
+        "length": 100,
+        "enabled_sections": [],
+        "stations": [
+            {
+                "name": "Smart Shuffle",
+                "key": "shuffle",
+                "sources": [
+                    {
+                        "name": "random",
+                        "filters": {},
+                        "sort": "userRating",
+                        "sort_weight": 1,
+                        "sort_reverse": False,
+                        "chance": 2,
+                    },
+                    {
+                        "name": "new",
+                        "filters": {"track.addedAt>>": "-30d"},
+                        "chance": 2,
+                    },
+                ],
+            }
+        ],
+        "hub_title": "Pomelo Stations",
+    }
     inflight = False
-
-    @property
-    def config(self):
-        return DEFAULT_CONFIG | Config.getPluginSettings(PLUGIN_NAME)
-
-    def server(self):
-        if self._server is None:
-            self._server = createServer()
-        return self._server
 
     def paths(self):
         sections = self.config["enabled_sections"]
         if len(sections) < 1:
-            all_sections = self.server().library.sections()
+            all_sections = self.server.library.sections()
             sections = [s.key for s in all_sections if s.TYPE == "artist"]
 
         routes = {
@@ -76,7 +67,7 @@ class Plugin:
     def returnStations(self, path, request, response):
         sections = self.config["enabled_sections"]
         if len(sections) < 1:
-            all_sections = self.server().library.sections()
+            all_sections = self.server.library.sections()
             sections = [s.key for s in all_sections if s.TYPE == "artist"]
 
         items = []
@@ -154,7 +145,7 @@ class Plugin:
         length = self.config["length"]
         sources = station["sources"]
         section_id = request.args[constants.URI_KEY].split("/")[-1].split("?")[0]
-        section = self.server().library.sectionByID(int(section_id))
+        section = self.server.library.sectionByID(int(section_id))
 
         pool = []
         weights = []
@@ -189,7 +180,7 @@ class Plugin:
         tracks = list(set(tracks))
         shuffle(tracks)  # set -> list changes the order, so we reshuffle
 
-        server = self.server()
+        server = self.server
         queue = PlayQueue.create(server, tracks)
 
         return requestToServer(f"playQueues/{str(queue.playQueueID)}", request.headers)
