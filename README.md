@@ -2,14 +2,15 @@
 
 Pomelo is a tool that lets you use Plugins extend or modify your Plex server's functionality, by intercepting and modifying communication between Plex players and your server.
 
-Pomelo lets you do all kinds of stuff to your sever - like **adding or customizing Hubs**:
+Pomelo lets you do all kinds of stuff to your sever - like **adding custom shuffle logic**:
 <p align="center">
-<img width="925" alt="image" src="https://github.com/user-attachments/assets/63afe4e3-e1e8-4445-9594-f3403845a6bc" />
+  <img width="476" height="537" alt="image" src="https://github.com/user-attachments/assets/591e79c0-971d-4f41-98c8-8abe609324c3" />
+
 </p>
 
 Or **adding custom Stations**:
 <p align="center">
-<img width="925" height="134" alt="image" src="https://github.com/user-attachments/assets/722efc05-0a26-4fae-89f7-cd5b481dac22" />
+  <img width="1097" height="742" alt="image" src="https://github.com/user-attachments/assets/4e4540ad-4535-4afe-85f1-4079ddf38c3b" />
 </p>
 
 <p align="center">
