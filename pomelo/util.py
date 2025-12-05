@@ -21,7 +21,6 @@ def buildResponse(response):
         return (
             response,
             200,
-            [("access-control-allow-origin", "*")],  # TODO
         )
     headers = [
         (k, v) for k, v in response.headers.items() if k.lower() not in excluded_headers
