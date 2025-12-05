@@ -21,7 +21,7 @@ def routeHandler(handlers, route):
 
             return buildResponse(interceptedResponse)
         except Exception as e:
-            print(e)
+            print("Hit error:", e, route, request, interceptedResponse)
             bail()
 
     inner.__name__ = route

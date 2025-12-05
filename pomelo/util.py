@@ -1,6 +1,5 @@
 import time
 import requests
-import rich
 from flask import abort
 from plexapi.server import PlexServer
 from pomelo.constants import TOKEN_KEY
