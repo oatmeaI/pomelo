@@ -1,6 +1,5 @@
 import time
 import requests
-import rich
 from flask import abort
 from plexapi.server import PlexServer
 from pomelo.constants import TOKEN_KEY
@@ -16,9 +15,10 @@ excluded_headers = [
 
 
 def buildResponse(response):
+    if type(response) is tuple:
+        return response
     if type(response) is dict:
         return (response, 200, [])
-
     headers = [
         (k, v) for k, v in response.headers.items() if k.lower() not in excluded_headers
     ]
