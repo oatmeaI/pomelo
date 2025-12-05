@@ -91,6 +91,8 @@ class Plugin(BasePlugin):
                 "key": f"/hijack/stations/{key}/{section}",
                 "guid": f"hijack://station/{key}/{section}",
                 "type": "playlist",
+                # "summary": station["desc"] if "desc" in station else "",
+                "parentTitle": station["desc"] if "desc" in station else "",
                 "title": station["name"],
                 "smart": True,
                 "playlistType": "audio",
@@ -109,7 +111,7 @@ class Plugin(BasePlugin):
             "context": "anyradios",
             "size": 0,
             "more": False,
-            "style": "grid",
+            "style": "shelf",
             "Metadata": [],
         }
 
