@@ -7,12 +7,10 @@ from pomelo.config import Config
 from pomelo.BasePlugin import BasePlugin
 from youtube_search import YoutubeSearch
 
-# TODO:
-# - configurable search terms, extra types, etc
-
 # LATER
 # - get correct title
 # - can I make it so search results don't change after a video is stopped?
+
 # Desktop client throws FFMpeg errors when we try to use HTTPS, so serve this one over http Problem is serviing "localhost" isn't gonna work in the long run when we're running on a
 # different machine than the server...need to find a workaround TODO
 # It also doesn't work to serve HTTP on app.plex.tv because CORS disallows fetching HTTP
@@ -58,7 +56,6 @@ class Plugin(BasePlugin):
 
     def stream(self, path, request, response):
         url = urllib.parse.unquote(request.args["url"])
-        print("sending video stream")
         res = requests.get(url)
         excluded_headers = ["connection", "expires"]
         headers = [
@@ -120,8 +117,6 @@ class Plugin(BasePlugin):
                 f"{STREAM_ENDPOINT}?url={urllib.parse.quote(stream_url, safe='')}"
             )
             container = "mp4"
-
-            print(stream_url)
 
             return {
                 "size": 1,
