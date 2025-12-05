@@ -16,10 +16,9 @@ FIELD_MINIMUMS = {
     "lastRatedAt": datetime.datetime.min,
 }
 
-PLUGIN_NAME = "AnyRadios"
-
 
 class Plugin(BasePlugin):
+    PLUGIN_NAME = "AnyRadios"
     DEFAULT_CONFIG = {
         "length": 100,
         "enabled_sections": [],

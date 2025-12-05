@@ -9,6 +9,8 @@ from youtube_search import YoutubeSearch
 
 # LATER
 # - get correct title
+# - pick higher quality streams if when available
+# - make it work on other clients (and safari)
 # - can I make it so search results don't change after a video is stopped?
 
 # Desktop client throws FFMpeg errors when we try to use HTTPS, so serve this one over http Problem is serviing "localhost" isn't gonna work in the long run when we're running on a
