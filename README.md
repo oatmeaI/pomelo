@@ -1,17 +1,18 @@
 # Pomelo (for Plex) 🐶
 
 <!--toc:start-->
-- [Pomelo (for Plex) 🐶](#pomelo-for-plex-🐶)
-  - [Contents](#contents)
+- [Pomelo (for Plex) 🐶](#pomelo-for-plex-)
+  - [Intro](#intro)
   - [Quickstart](#quickstart)
       - [A couple things to note:](#a-couple-things-to-note)
   - [Configuration](#configuration)
   - [Plugins](#plugins)
-  - [Builtin Plugins](#builtin-plugins)
+      - [Builtin Plugins](#builtin-plugins)
   - [Thanks](#thanks)
   - [Prior Art](#prior-art)
 <!--toc:end-->
 
+## Intro
 Pomelo is a tool that lets you use Plugins extend or modify your Plex server's functionality, by intercepting and modifying communication between Plex players and your server.
 
 Pomelo lets you do all kinds of stuff to your sever - like **create custom Stations**:
@@ -80,8 +81,8 @@ Extensions to Plex functionality served by Pomelo are handled by plugins.
 Pomelo bundles some builtin plugins, and can load external plugins.
 - [Plugin Documentation](docs/Plugins.md)
 
-## Builtin Plugins
-|Plugin Name|What it does|Plugin Id|Plugin Documentation|
+### Builtin Plugins
+|Plugin Name|What it does|Plugin Id|Documentation|
 |-----------|------------|----------|---------------------|
 |ExploreRadio|Adds a new Station to your Music library.|`pomelo.plugins.ExploreRadio`|[Documentation](docs/plugins/ExploreRadio.md)|
 |AnyRadios|Lets you create custom "stations" that shuffle your music collection according to logic you define.|`pomelo.plugins.AnyRadios`|[Documentation](docs/plugins/AnyRadios.md)|
