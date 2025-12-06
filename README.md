@@ -64,7 +64,7 @@ services:
     depends_on:
       - plex
 ```
-#### A couple things to note:
+### A couple things to note:
 - Your Plex Media Server container must _not_ use `network_mode: host`; the Pomelo container needs to bind to port 32400.
 - Pomelo _requires_ a volume mapping from the directory on the host machine where the Plex libary is stored to `/config`.
 - You may want enable the `Treat WAN IP As LAN Bandwidth` setting in the Network tab of the Plex Media Server settings if you're having trouble with Plex throttling streams.
