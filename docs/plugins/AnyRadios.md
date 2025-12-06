@@ -1,7 +1,6 @@
 # AnyRadios
-- `pomelo.plugins.AnyRadios`
-
 Adds a new hub to music sections of your library where you can add custom "stations" that shuffle your music collection according to logic you define.
+- `pomelo.plugins.AnyRadios`
 
 ## Options
 |Option name|What it does|Default value|
@@ -11,7 +10,7 @@ Adds a new hub to music sections of your library where you can add custom "stati
 |`hub_title`|The title of the hub where your custom stations are show.|`Pomelo Stations`|
 |`stations`|A list of station definitions. See below for more.|See below.|
 
-## Station Configurations
+### Station Configurations
 The easiest way to understand station config is probably with an example:
 ```toml
 [[AnyRadios.stations]]
@@ -29,9 +28,10 @@ sort_weight = 1                             # Determines how much more likely th
 chance = 1
 ```
 
-### Sorting & Filtering
+### Sorting
 See [here](https://www.plexopedia.com/plex-media-server/api/filter/) for a guide to Plex's filtering syntax.
 
+### Filtering
 In this example, the most recently added track will be twice as likely than a random track (from the source below); the least recently added track will be equally as likely as a random track.
 Other tracks in the list will be somewhere in between; for example, if there are three tracks in this source:
 - Track 1: Chance 2

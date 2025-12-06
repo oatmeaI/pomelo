@@ -1,5 +1,17 @@
 # Pomelo (for Plex) 🐶
 
+<!--toc:start-->
+- [Pomelo (for Plex) 🐶](#pomelo-for-plex-🐶)
+  - [Contents](#contents)
+  - [Quickstart](#quickstart)
+      - [A couple things to note:](#a-couple-things-to-note)
+  - [Configuration](#configuration)
+  - [Plugins](#plugins)
+  - [Builtin Plugins](#builtin-plugins)
+  - [Thanks](#thanks)
+  - [Prior Art](#prior-art)
+<!--toc:end-->
+
 Pomelo is a tool that lets you use Plugins extend or modify your Plex server's functionality, by intercepting and modifying communication between Plex players and your server.
 
 Pomelo lets you do all kinds of stuff to your sever - like **create custom Stations**:
@@ -17,19 +29,9 @@ Or show related videos from **YouTube in the Extras section**:
 [more examples to come, as I build them!]
 </p>
 
-## Contents
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Plugins](#plugins)
-  - [Explore Radio](#explore-radio)
-  - [Better Track Radio](#better-track-radio)
-  - [AnyRadios](#anyradios)
-- [Thanks](#thanks)
-- [Prior Art](#prior-art)
-
-## Installation 
-Pomelo is built to run in a container, as part of a compose stack with Plex Media Server. If you're already running PMS inside a container, adding Pomelo is super easy - just update your `docker-compose.yml` to add Pomelo
-to the stack:
+## Quickstart 
+Pomelo is built to run in a container, as part of a compose stack with Plex Media Server. 
+If you're already running PMS inside a container, adding Pomelo is super easy - just update your `docker-compose.yml` to add Pomelo to the stack:
 ```yml
 services:
   plex:
@@ -42,7 +44,7 @@ services:
       - TZ=Etc/UTC
       - VERSION=docker
     ports:
-      - 5001:32400            # In case you need to reach the original server for some reason
+      - 5001:32400            # Not required; just here in case you need to reach the original server for some reason
     volumes:
       - /plex:/config
       - /media/music:/music
@@ -53,12 +55,12 @@ services:
   pomelo:
     image: oatmealmonster/pomelo:latest
     environment:
-      - PYTHONUNBUFFERED=1    # Make `print` work
+      - PYTHONUNBUFFERED=1    # Make `print` work; not required
     ports:
       - 32400:5500
     volumes:
-      - /plex:/config         # !!Make this the same as the /config volume in the plex service!!
-      - /plex/pomelo:/pomelo  # This can be anywhere - this is where Pomelo will store it's configuration files
+      - /plex:/config         # REQUIRED !!Make this the same as the /config volume in the plex service!!
+      - /plex/pomelo:/pomelo  # REQUIRED This can be anywhere - this is where Pomelo will store it's configuration files
     depends_on:
       - plex
 ```
@@ -68,89 +70,23 @@ services:
 - You may want enable the `Treat WAN IP As LAN Bandwidth` setting in the Network tab of the Plex Media Server settings if you're having trouble with Plex throttling streams.
 
 ## Configuration
-Pomelo stores a `pomelo_config.toml` file in the `/pomelo` volume specified in your `docker-compose.yml`. Most of the options should be left at their defaults 99% of the time, with the exception
-of plugin configuation (see below)
-
-|Option name|What it does|Default value|
-|-----------|------------|-------------|
-|`caddy_admin_url`|Specifies the admin url for the [Caddy](https://caddyserver.com/) server that Pomelo runs. Should be left at default.|`http://localhost:2019`|
-|`caddy_listen_port`|The port the Caddy server should listen on. Should be left at default.|`5500`|
-|`plex_host`|The url to the Plex server. Should only be changed if you know what you're doing.|`plex`|
-|`plex_port`|The port the Plex server is running on. Should only be changed if you know what you're doing.|`32400`|
-|`plex_token`|An access token for requests to your Plex server. Pomelo should be able to populate this automatically; if you run into issues you can set it yourself: [Finding X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/) |empty|
-|`pomelo_port`|The port (on the container) that Pomelo runs on. You shouldn't need to change this, but if you do, you'll need to update your `docker-compose.yml` accordingly.|`32400`|
-|`enabled_plugins`|A list of plugins that Pomelo should load & run. Feel free to edit & update this as you wish.|`["pomelo.plugins.ExploreRadio", "pomelo.plugins.AnyRadios"]`|
+Pomelo stores a `pomelo_config.toml` file in the `/pomelo` volume specified in your `docker-compose.yml`.
+Most of the options should be left at their defaults 99% of the time, with the exception
+of plugin configuation (see below).
+- [Config Option Documentation](docs/Config.md)
 
 ## Plugins
-Extensions to Plex functionality served by Pomelo are handled by plugins. Pomelo currently comes bundled with three plugins, and can load external plugins as well.
+Extensions to Plex functionality served by Pomelo are handled by plugins. 
+Pomelo bundles some builtin plugins, and can load external plugins.
+- [Plugin Documentation](docs/Plugins.md)
 
-### External Plugins
-External plugins can be placed in `/pomelo/plugins`, and added to the `enabled_plugins` list in `pomelo_config.toml`.
-
-### Plugin Config
-Some plugins offer their own config options. These can be specified under `[{Plugin Name}]` in `pomelo_config.toml`:
-```toml
-[ExploreRadio]
-station_name = "Cool Radio"
-```
-Available options for each builtin plugin are listed in the documentation for each plugin.
-
-## Explore Radio
-- `pomelo.plugins.ExploreRadio`
-
-Explore Radio adds a new Station to your Music library which tries to play a pretty even mix of songs you've rated highly and songs you've never heard before, while maintaining a vibe (using Plex's sonic similarity feature).
-
-### Options
-|Option name|What it does|Default value|
-|-----------|------------|-------------|
-|`station_name`|The name of the station in the Plex UI|`Explore Radio`|
-|`enabled_sections`|Library sections where the Pomelo Stations should be shown. If empty, it will be shown in every music section in your library.|`[]`|
-
-## Better Track Radio
-- `pomelo.plugins.BetterTrackRadio`
-
-Better Track Radio makes the radios started from a track (only possible on Plexamp) use similar logic to the Explore Radio plugin.
-
-## AnyRadios
-- `pomelo.plugins.AnyRadios`
-- [Documentation](docs/plugins/AnyRadios.md)
-
-Adds a new hub to music sections of your library where you can add custom "stations" that shuffle your music collection according to logic you define.
-
-### Options
-|Option name|What it does|Default value|
-|-----------|------------|-------------|
-|`length`|How many tracks should be added to the queue when a station is started. Larger numbers will make the station play for longer, but take longer to start up.|`100`|
-|`enabled_sections`|Library sections where the Pomelo Stations should be shown. If empty, it will be shown in every music section in your library.|`[]`|
-|`hub_title`|The title of the hub where your custom stations are show.|`Pomelo Stations`|
-|`stations`|A list of station definitions. See below for more.|See below.|
-
-### Station Configurations
-The easiest way to understand station config is probably with an example:
-```toml
-[[AnyRadios.stations]]
-name = "Smart Shuffle"                      # [Required] The name of the station shown in the UI.
-key = "smart"                               # [Required] Used in the backend.
-
-[[AnyRadios.stations.sources]]              # Each station can have as many sources as you want.
-filters = { "track.addedAt>>" = "-90d" }    # Filters that restrict which tracks will be included in this source. Uses Plex's filter syntax; see below.
-chance = 2                                  # [Required] The chance a track from this source will be picked relative to the other sources. In this example, this source is twice as likely as the second source below.
-sort = "addedAt"                            # If a source has a `sort` defined, the first track will be more likely to be added to the queue than the last.
-sort_reverse = true
-sort_weight = 1                             # Determines how much more likely the first track will be than the last.
-
-[[AnyRadios.stations.sources]]              # A source with no filters will pick a random assortment of tracks.
-chance = 1
-```
-
-#### Sorting & Filtering
-See [here](https://www.plexopedia.com/plex-media-server/api/filter/) for a guide to Plex's filtering syntax.
-
-In this example, the most recently added track will be twice as likely than a random track (from the source below); the least recently added track will be equally as likely as a random track.
-Other tracks in the list will be somewhere in between; for example, if there are three tracks in this source:
-- Track 1: Chance 2
-- Track 2: Chance 1.5
-- Track 3: Chance 1
+## Builtin Plugins
+|Plugin Name|What it does|Plugin Id|Plugin Documentation|
+|-----------|------------|----------|---------------------|
+|Explore Radio|Explore Radio adds a new Station to your Music library which tries to play a pretty even mix of songs you've rated highly and songs you've never heard before, while maintaining a vibe (using Plex's sonic similarity feature).|`pomelo.plugins.ExploreRadio`|[Documentation](docs/plugins/ExploreRadio.md)|
+|AnyRadios|Adds a new hub to music sections of your library where you can add custom "stations" that shuffle your music collection according to logic you define.|`pomelo.plugins.AnyRadios`|[Documentation](docs/plugins/AnyRadios.md)|
+|Better Track Radio|Better Track Radio makes the radios started from a track (only possible on Plexamp) use similar logic to the Explore Radio plugin.|`pomelo.plugins.BetterTrackRadio`|[in progress...]|
+|YouTube Videos|Searches YouTube for videos related to library items and adds them to the "Extras" section.|`pomelo.plugins.YoutubeVideos`|[in progress...]|
 
 ## Thanks
 Huge thanks [@cchaz003](https://github.com/cchaz003) for all the help testing this, and for the idea to use containers!
