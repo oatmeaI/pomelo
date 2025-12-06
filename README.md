@@ -83,10 +83,10 @@ Pomelo bundles some builtin plugins, and can load external plugins.
 ## Builtin Plugins
 |Plugin Name|What it does|Plugin Id|Plugin Documentation|
 |-----------|------------|----------|---------------------|
-|Explore Radio|Explore Radio adds a new Station to your Music library which tries to play a pretty even mix of songs you've rated highly and songs you've never heard before, while maintaining a vibe (using Plex's sonic similarity feature).|`pomelo.plugins.ExploreRadio`|[Documentation](docs/plugins/ExploreRadio.md)|
-|AnyRadios|Adds a new hub to music sections of your library where you can add custom "stations" that shuffle your music collection according to logic you define.|`pomelo.plugins.AnyRadios`|[Documentation](docs/plugins/AnyRadios.md)|
-|Better Track Radio|Better Track Radio makes the radios started from a track (only possible on Plexamp) use similar logic to the Explore Radio plugin.|`pomelo.plugins.BetterTrackRadio`|[in progress...]|
-|YouTube Videos|Searches YouTube for videos related to library items and adds them to the "Extras" section.|`pomelo.plugins.YoutubeVideos`|[in progress...]|
+|ExploreRadio|Adds a new Station to your Music library.|`pomelo.plugins.ExploreRadio`|[Documentation](docs/plugins/ExploreRadio.md)|
+|AnyRadios|Lets you create custom "stations" that shuffle your music collection according to logic you define.|`pomelo.plugins.AnyRadios`|[Documentation](docs/plugins/AnyRadios.md)|
+|BetterTrackRadio|Makes stations started from a track use similar logic to the Explore Radio plugin.|`pomelo.plugins.BetterTrackRadio`|[in progress...]|
+|YouTubeVideos|Searches YouTube for videos related to library items and adds them to the "Extras" section.|`pomelo.plugins.YoutubeVideos`|[in progress...]|
 
 ## Thanks
 Huge thanks [@cchaz003](https://github.com/cchaz003) for all the help testing this, and for the idea to use containers!
