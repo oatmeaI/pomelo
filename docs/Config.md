@@ -1,6 +1,6 @@
 ## Configuration
 Pomelo stores a `pomelo_config.toml` file in the `/pomelo` volume specified in your `docker-compose.yml`. 
-Most of the options should be left at their defaults 99% of the time, with the exception of [plugin configuation](docs/PluginConfig.md).
+Most of the options should be left at their defaults 99% of the time, with the exception of [plugin configuation](./Plugins.md#plugin-config).
 
 |Option name|What it does|Default value|
 |-----------|------------|-------------|
