@@ -1,7 +1,7 @@
 ## Plugins
 Extensions to Plex functionality served by Pomelo are handled by plugins. 
 Pomelo bundles some builtin plugins, and can load external plugins.
-- [Plugin Documentation](docs/Plugins.md)
+- [Plugin Documentation](/docs/Plugins.md)
 
 ## Built-In Plugins
 |Plugin Name|What it does|Plugin Id|Plugin Documentation|
