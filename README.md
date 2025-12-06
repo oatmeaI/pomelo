@@ -113,6 +113,7 @@ Better Track Radio makes the radios started from a track (only possible on Plexa
 
 ## AnyRadios
 - `pomelo.plugins.AnyRadios`
+- [Documentation](docs/plugins/AnyRadios.md)
 
 Adds a new hub to music sections of your library where you can add custom "stations" that shuffle your music collection according to logic you define.
 
