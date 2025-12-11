@@ -168,16 +168,44 @@ class Plugin(BasePlugin):
                     reverse=reverse,
                 )
 
-            sort_weight_max = source["sort_weight"] if "sort_weight" in source else 0.0
+            sort_weight_max = source["chance"]
+            # sort_weight_max = source["sort_weight"] if "sort_weight" in source else 0.0
             sort_weight_start = sort_weight_max / len(tracks) if len(tracks) > 0 else 1
             sort_weight = 0.0
 
+            # TODO: sorting is turned off for now because it has weird affects on
+            # the results the way its implemented now
+            # The correct implementation would be
+            # - have a pool for each source
+            # - pick a source according to weights
+            # - randomly pick a track from that sources pool, weighted by sort if needed
+            # but this is kinda complex and maybe not worth it for now
+
             for track in tracks:
-                pool.append(track)
-                weights.append(source["chance"] - sort_weight)
+                weight = source["chance"]  # - sort_weight
+                thing = {"track": track, "source": source["name"], "weight": weight}
+                pool.append(thing)
+                weights.append(weight)
                 sort_weight += sort_weight_start
 
-        tracks = choices(pool, weights=weights, k=length)
+        tracks = []
+        while len(tracks) < length:
+            choice = choices(pool, weights=weights, k=1)[0]
+            tracks.append(choice)
+            del weights[pool.index(choice)]
+            pool.remove(choice)
+
+        totals = {}
+        for source in sources:
+            totals[source["name"]] = 0
+
+        for track in tracks:
+            totals[track["source"]] += 1
+            print(track)
+
+        print(totals)
+
+        tracks = [track["track"] for track in tracks]
         tracks = list(set(tracks))
         shuffle(tracks)  # set -> list changes the order, so we reshuffle
 
