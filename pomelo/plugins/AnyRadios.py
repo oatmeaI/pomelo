@@ -1,20 +1,14 @@
-import datetime
+import concurrent.futures
 import json
-from random import choices, shuffle
 
+from random import choices
+from rich.table import Table
+from rich.console import Console
 from plexapi.server import PlayQueue
 
 from pomelo.BasePlugin import BasePlugin
 from pomelo import constants
-from pomelo.config import Config
-from pomelo.util import createServer, requestToServer
-
-# Anything not listed here will default to 0
-FIELD_MINIMUMS = {
-    "addedAt": datetime.datetime.min,
-    "lastViewedAt": datetime.datetime.min,
-    "lastRatedAt": datetime.datetime.min,
-}
+from pomelo.util import requestToServer
 
 
 class Plugin(BasePlugin):
@@ -28,17 +22,18 @@ class Plugin(BasePlugin):
                 "key": "shuffle",
                 "sources": [
                     {
-                        "name": "random",
+                        "name": "random",  # Not used except in logging; required
                         "filters": {},
-                        "sort": "userRating",
-                        "sort_weight": 1,
-                        "sort_reverse": False,
-                        "chance": 2,
+                        "weight": "track.userRating:desc",  # Weights tracks in source from most likely to least likely, based on key defined
+                        "weight_factor": 2,  # How much more likely the first track is than the last
+                        "chance": 50,  # How likely this source is to be chosen. No requirements, but it is easier to think about if they add up to 100
                     },
                     {
                         "name": "new",
                         "filters": {"track.addedAt>>": "-30d"},
-                        "chance": 2,
+                        "sort": "track.addedAt:desc",  # Sort: sorts query from plexapi, instead of random order
+                        "length": 50,  # Overrides top-level length setting. Should equal at least percentage chance x top level length to ensure there are enough tracks. In this case .5 x 100.
+                        "chance": 50,
                     },
                 ],
             }
@@ -127,7 +122,32 @@ class Plugin(BasePlugin):
         response._content = json.dumps(content)
         return response
 
+    def load_source(self, source, section, length):
+        filters = source["filters"] if "filters" in source else {}
+        sort = source["sort"] if "sort" in source else "random"
+        length = source["length"] if "length" in source else length
+        tracks = section.searchTracks(maxresults=length, sort=sort, filters=filters)
+        return tracks
+
+    def console(self, thing):
+        with open("report.txt", "at") as report_file:
+            console = Console(file=report_file)
+            console.print(thing)
+        console = Console()
+        console.print(thing)
+
+    def get_key(self, track, obj, prop):
+        map = {
+            "track": lambda track: track,
+            "album": lambda track: track.album(),
+            "artist": lambda track: track.artist(),
+        }
+        return getattr(map[obj](track), prop)
+
     def startStation(self, path, request, response):
+        if self.inflight:
+            return response
+
         if constants.URI_KEY not in request.args:
             return response
 
@@ -143,73 +163,106 @@ class Plugin(BasePlugin):
         if station is None:
             return response
 
-        length = self.config["length"]
-        sources = station["sources"]
-        section_id = request.args[constants.URI_KEY].split("/")[-1].split("?")[0]
-        section = self.server.library.sectionByID(int(section_id))
+        self.inflight = True
+        try:
+            length = self.config["length"]
+            sources = station["sources"]
+            section_id = request.args[constants.URI_KEY].split("/")[-1].split("?")[0]
+            section = self.server.library.sectionByID(int(section_id))
 
-        pool = []
-        weights = []
+            pool = {}
 
-        for source in sources:
-            filters = source["filters"] if "filters" in source else {}
-            tracks = section.searchTracks(
-                maxresults=length, sort="random", filters=filters
-            )
+            self.console(f"Starting {station["name"]}")
+            with concurrent.futures.ThreadPoolExecutor(max_workers=25) as executor:
+                future_to_source = {
+                    executor.submit(self.load_source, source, section, length): source
+                    for source in sources
+                }
+                self.console("Started fetching tracks")
+                for future in concurrent.futures.as_completed(future_to_source):
+                    source = future_to_source[future]
+                    tracks = future.result()
+                    self.console(f"Fetched {source["name"]}")
+                    source_name = source["name"]
+                    pool[source_name] = {}
+                    pool[source["name"]]["tracks"] = tracks
+                    pool[source["name"]]["weights"] = [1 for _ in tracks]
 
-            if "sort" in source:
-                sort_key = source["sort"]
-                reverse = source["sort_reverse"]
-                tracks.sort(
-                    key=lambda track: getattr(track, sort_key)
-                    or FIELD_MINIMUMS[sort_key]
-                    if sort_key in FIELD_MINIMUMS
-                    else 0,
-                    reverse=reverse,
+                    if "weight" in source:
+                        pool[source["name"]]["weights"] = []
+                        weight_factor = (
+                            source["weight_factor"] if "weight_factor" in source else 2
+                        )
+                        # If sort_weight is 2, the first track is 2x more likely than the last
+                        weight = weight_factor
+                        factor = (weight - 1) / len(tracks)
+                        [key, dir] = source["weight"].split(":")
+                        reverse = dir == "desc"
+                        [obj, prop] = key.split(".")
+                        tracks = sorted(
+                            tracks,
+                            key=lambda track: self.get_key(track, obj, prop),
+                            reverse=reverse,
+                        )
+                        for track in tracks:
+                            pool[source["name"]]["weights"].append(weight)
+                            weight -= factor
+
+            tracks = []
+            options = [source["name"] for source in sources]
+            option_weights = [source["chance"] for source in sources]
+
+            totals = {}
+            rows = []
+            while len(tracks) < length:
+                source_name = choices(options, weights=option_weights, k=1)[0]
+                source = pool[source_name]
+
+                if len(source["tracks"]) < 1:
+                    self.console(f"Out of tracks for {source_name}, skipping...")
+                    continue
+
+                track = choices(source["tracks"], weights=source["weights"], k=1)[0]
+
+                # Pick again if that track is already in the queue
+                while track in tracks:
+                    track = choices(source["tracks"], weights=source["weights"], k=1)[0]
+
+                tracks.append(track)
+
+                del source["weights"][source["tracks"].index(track)]
+                source["tracks"].remove(track)
+
+                totals[source_name] = (
+                    0 if source_name not in totals else totals[source_name] + 1
                 )
+                rows.append({"track": track, "source": source_name})
 
-            sort_weight_max = source["chance"]
-            # sort_weight_max = source["sort_weight"] if "sort_weight" in source else 0.0
-            sort_weight_start = sort_weight_max / len(tracks) if len(tracks) > 0 else 1
-            sort_weight = 0.0
+            table = Table(title="Tracks", show_lines=True, width=55)
+            table.add_column("Artist", style="cyan", justify="right")
+            table.add_column("Track", style="green")
+            table.add_column("Source", style="magenta")
 
-            # TODO: sorting is turned off for now because it has weird affects on
-            # the results the way its implemented now
-            # The correct implementation would be
-            # - have a pool for each source
-            # - pick a source according to weights
-            # - randomly pick a track from that sources pool, weighted by sort if needed
-            # but this is kinda complex and maybe not worth it for now
+            for row in reversed(rows):
+                table.add_row(
+                    row["track"].grandparentTitle, row["track"].title, row["source"]
+                )
+            self.console(table)
 
-            for track in tracks:
-                weight = source["chance"]  # - sort_weight
-                thing = {"track": track, "source": source["name"], "weight": weight}
-                pool.append(thing)
-                weights.append(weight)
-                sort_weight += sort_weight_start
+            table = Table(title="Sources")
+            table.add_column("Source", justify="right", style="cyan", no_wrap=True)
+            table.add_column("Count", style="magenta")
+            table.add_column("Percentage", justify="left", style="green")
 
-        tracks = []
-        while len(tracks) < length:
-            choice = choices(pool, weights=weights, k=1)[0]
-            tracks.append(choice)
-            del weights[pool.index(choice)]
-            pool.remove(choice)
+            for key, value in totals.items():
+                table.add_row(f"{key}", f"{value}", f"{value/length:.0%}")
 
-        totals = {}
-        for source in sources:
-            totals[source["name"]] = 0
+            self.console(table)
 
-        for track in tracks:
-            totals[track["source"]] += 1
-            print(track)
-
-        print(totals)
-
-        tracks = [track["track"] for track in tracks]
-        tracks = list(set(tracks))
-        shuffle(tracks)  # set -> list changes the order, so we reshuffle
-
-        server = self.server
-        queue = PlayQueue.create(server, tracks)
-
-        return requestToServer(f"playQueues/{str(queue.playQueueID)}", request.headers)
+            server = self.server
+            queue = PlayQueue.create(server, tracks)
+            return requestToServer(
+                f"playQueues/{str(queue.playQueueID)}", request.headers
+            )
+        finally:
+            self.inflight = False

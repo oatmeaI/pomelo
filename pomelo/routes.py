@@ -1,4 +1,5 @@
 from flask import request
+import traceback
 import json
 from pomelo.util import bail, buildResponse, forwardRequest
 from pomelo.config import Config
@@ -6,6 +7,7 @@ from pomelo.config import Config
 
 def routeHandler(handlers, route):
     def inner(*args, **kwargs):
+        interceptedResponse = None
         try:
             # We can't watch filesystem events from inside a container, so
             # we just refresh the config at every request. Not super efficient,
@@ -22,6 +24,7 @@ def routeHandler(handlers, route):
             return buildResponse(interceptedResponse)
         except Exception as e:
             print("Hit error:", e, route, request, interceptedResponse)
+            traceback.print_exc()
             bail()
 
     inner.__name__ = route
