@@ -199,9 +199,13 @@ class Plugin(BasePlugin):
                         [key, dir] = source["weight"].split(":")
                         reverse = dir == "desc"
                         [obj, prop] = key.split(".")
+                        # https://stackoverflow.com/questions/18411560/sort-list-while-pushing-none-values-to-the-end
                         tracks = sorted(
                             tracks,
-                            key=lambda track: self.get_key(track, obj, prop),
+                            key=lambda track: (
+                                self.get_key(track, obj, prop) is None,
+                                self.get_key(track, obj, prop),
+                            ),
                             reverse=reverse,
                         )
                         for track in tracks:
