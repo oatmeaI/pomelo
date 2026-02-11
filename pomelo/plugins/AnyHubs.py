@@ -122,7 +122,6 @@ class Plugin(BasePlugin):
             ]
             return items
         else:
-            # TODO
             return []
 
     def add_hubs(self, path, request, response):
@@ -134,16 +133,11 @@ class Plugin(BasePlugin):
                 for hub in self.config["hubs"]
             }
             for future in concurrent.futures.as_completed(future_to_source):
-                # hub = future_to_source[future]
                 hub = future.result()
                 content["MediaContainer"]["Hub"].insert(0, hub)
                 content["MediaContainer"]["size"] = (
                     content["MediaContainer"]["size"] + 1
                 )
-        # for hub in self.config["hubs"]:
-        #     hub = self.create_hub(hub)
-        #     content["MediaContainer"]["Hub"].insert(0, hub)
-        #     content["MediaContainer"]["size"] = content["MediaContainer"]["size"] + 1
 
         response._content = json.dumps(content)
         return response
