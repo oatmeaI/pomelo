@@ -1,6 +1,5 @@
 FROM python:latest
 
-
 RUN apt update
 RUN apt --assume-yes install caddy pipx
 
@@ -13,5 +12,4 @@ COPY ./pyproject.toml /code/pomelo/pyproject.toml
 COPY ./README.md /code/pomelo/README.md
 WORKDIR /code/pomelo
 
-# RUN poetry install
 CMD caddy start ; poetry install && poetry run start_dev
