@@ -4,11 +4,13 @@ import os
 
 from pomelo.certs import read_prefs
 from pomelo.constants import CONFIG_FILE_NAME
+from pomelo.base_path import config_path
 
 
 DEFAULTS = {
     "caddy_admin_url": "http://localhost:2019",
     "caddy_listen_port": 5500,
+    "use_caddy": True,
     "plex_host": "plex",
     "plex_port": 32400,
     "plex_token": "",
@@ -21,7 +23,7 @@ class _Config:
     def __init__(self):
         self.data = DEFAULTS
 
-        self.config_dir = "/pomelo"
+        self.config_dir = config_path
         self.config_file_path = f"{self.config_dir}/{CONFIG_FILE_NAME}"
 
         self.load_config()
@@ -45,6 +47,7 @@ class _Config:
         self.caddy_listen_port = self.data["caddy_listen_port"]
         self.pomelo_port = self.data["pomelo_port"]
         self.plex_token = self.data["plex_token"]
+        self.use_caddy = self.data["use_caddy"]
 
     def load_config(self):
         if os.path.exists(self.config_file_path):

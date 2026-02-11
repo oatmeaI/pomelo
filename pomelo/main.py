@@ -19,7 +19,10 @@ def boot():
 
     app = init_app()
     plugins = init_plugins()
-    init_caddy()
+
+    if Config.use_caddy:
+        init_caddy()
+
     init_routes(app, plugins)
 
     wizard_app()

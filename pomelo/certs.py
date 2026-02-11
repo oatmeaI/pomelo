@@ -1,12 +1,17 @@
 import subprocess
 import xmltodict
 import hashlib
+from pomelo.base_path import base_path
 
-prefs_path = "/config/Library/Application Support/Plex Media Server/Preferences.xml"
-p12_path = "/config/Library/Application Support/Plex Media Server/Cache/cert-v2.p12"
-cert_path = "/config/pomelo/cert.pem"
-key_pem_path = "/config/pomelo/key.pem"
-key_path = "/config/pomelo/server.key"
+prefs_path = (
+    base_path + "/Library/Application Support/Plex Media Server/Preferences.xml"
+)
+p12_path = (
+    base_path + "/Library/Application Support/Plex Media Server/Cache/cert-v2.p12"
+)
+cert_path = base_path + "/pomelo/cert.pem"
+key_pem_path = base_path + "/pomelo/key.pem"
+key_path = base_path + "/pomelo/server.key"
 
 
 def read_prefs():
