@@ -1,4 +1,5 @@
 import concurrent.futures
+import datetime
 import json
 
 from random import choices
@@ -9,6 +10,23 @@ from plexapi.server import PlayQueue
 from pomelo.BasePlugin import BasePlugin
 from pomelo import constants
 from pomelo.util import requestToServer
+
+from functools import wraps
+from time import time
+
+
+# TODO: move this somewhere central
+# https://stackoverflow.com/questions/1622943/timeit-versus-timing-decorator
+def timing(f):
+    @wraps(f)
+    def wrap(*args, **kw):
+        ts = time()
+        result = f(*args, **kw)
+        te = time()
+        print("func:%r took: %2.4f sec" % (f.__name__, te - ts))
+        return result
+
+    return wrap
 
 
 class Plugin(BasePlugin):
@@ -125,7 +143,11 @@ class Plugin(BasePlugin):
     def load_source(self, source, section, length):
         filters = source["filters"] if "filters" in source else {}
         sort = source["sort"] if "sort" in source else "random"
-        length = source["length"] if "length" in source else length
+        length = int(
+            source["length"]
+            if "length" in source
+            else (length * (source["chance"] / 100)) * 1.5
+        )
         tracks = section.searchTracks(maxresults=length, sort=sort, filters=filters)
         return tracks
 
@@ -144,6 +166,7 @@ class Plugin(BasePlugin):
         }
         return getattr(map[obj](track), prop)
 
+    @timing
     def startStation(self, path, request, response):
         if self.inflight:
             return response
@@ -224,7 +247,10 @@ class Plugin(BasePlugin):
 
                 if len(source["tracks"]) < 1:
                     self.console(f"Out of tracks for {source_name}, skipping...")
-                    continue
+                    for name, source in pool.items():
+                        if len(source["tracks"]) > 0:
+                            continue
+                    break
 
                 track = choices(source["tracks"], weights=source["weights"], k=1)[0]
 
@@ -238,7 +264,7 @@ class Plugin(BasePlugin):
                 source["tracks"].remove(track)
 
                 totals[source_name] = (
-                    0 if source_name not in totals else totals[source_name] + 1
+                    1 if source_name not in totals else totals[source_name] + 1
                 )
                 rows.append({"track": track, "source": source_name})
 
@@ -259,7 +285,7 @@ class Plugin(BasePlugin):
             table.add_column("Percentage", justify="left", style="green")
 
             for key, value in totals.items():
-                table.add_row(f"{key}", f"{value}", f"{value/length:.0%}")
+                table.add_row(f"{key}", f"{value}", f"{value/len(tracks):.0%}")
 
             self.console(table)
 
