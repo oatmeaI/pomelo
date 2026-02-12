@@ -48,6 +48,7 @@ class _Config:
         self.pomelo_port = self.data["pomelo_port"]
         self.plex_token = self.data["plex_token"]
         self.use_caddy = self.data["use_caddy"]
+        self.plex_url = f"{self.plex_host}:{self.plex_port}"
 
     def load_config(self):
         if os.path.exists(self.config_file_path):

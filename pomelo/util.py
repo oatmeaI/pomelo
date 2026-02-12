@@ -4,6 +4,7 @@ from flask import abort
 from plexapi.server import PlexServer
 from pomelo.constants import TOKEN_KEY
 from pomelo.config import Config
+from flask import Response
 
 excluded_headers = [
     "content-encoding",
@@ -15,6 +16,8 @@ excluded_headers = [
 
 
 def buildResponse(response):
+    if type(response) is Response:
+        return response
     if type(response) is tuple:
         return response
     if type(response) is dict:
