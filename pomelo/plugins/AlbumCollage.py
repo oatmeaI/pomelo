@@ -1,6 +1,7 @@
 from datetime import date, datetime, timedelta
+import concurrent.futures
 import requests
-from PIL import Image
+from PIL import Image, ImageFont, ImageDraw
 from io import BytesIO
 from urllib.parse import urlencode
 from pomelo.BasePlugin import BasePlugin
@@ -41,8 +42,8 @@ class Plugin(BasePlugin):
         library_section = request.args.get("library_section") or 1
 
         albums = self.get_albums(library_section, start, days, rows * cols)
-        thumbs = [self.load_image(x.images[0].url) for x in albums]
-        collage = self.make_grid(thumbs, cols, rows, spacing, max_size, background)
+        self.load_all_images(albums)
+        collage = self.make_grid(albums, cols, rows, spacing, max_size, background)
 
         img_io = BytesIO()
         collage.save(img_io, "PNG", quality=70)
@@ -50,30 +51,46 @@ class Plugin(BasePlugin):
         return Response(img_io, mimetype="image/jpeg")
 
     def make_grid(
-        self, images, cols=3, rows=3, spacing=0, max_size=200, background="FFFFFF"
+        self, albums, cols=3, rows=3, spacing=0, max_size=200, background="FFFFFF"
     ):
-        img_width = min(img.width for img in images)
-        img_height = min(img.height for img in images)
+        img_width = min(album["image"].width for album in albums)
+        img_height = min(album["image"].height for album in albums)
         size = min([img_width, img_height, max_size])
 
         width = (size * cols) + (spacing * (cols + 1))
         height = (size * rows) + (spacing * (rows + 1))
 
         collage = Image.new("RGB", (width, height), color=f"#{background}")
-        for i, img in enumerate(images):
+        draw = ImageDraw.Draw(collage)
+        for i, album in enumerate(albums):
+            img = album["image"]
             img = img.resize((size, size), Image.Resampling.LANCZOS)
             row = i // rows
             col = i % cols
             x = (col * (size + spacing)) + spacing
             y = (row * (size + spacing)) + spacing
             collage.paste(img, (x, y))
+            # draw.text((x, y), f"{album['count']}", (255, 255, 255))
 
         return collage
 
-    def load_image(self, image_key):
-        url = f"http://{Config.plex_url}{image_key}?X-Plex-Token={Config.plex_token}"
+    def load_image(self, album):
+        url = f"http://{Config.plex_url}{album['art']}?X-Plex-Token={Config.plex_token}"
         image = Image.open(requests.get(url, stream=True).raw)
-        return image
+        album["image"] = image
+        return album
+
+    def do_concurrent(self, collection, cb):
+        results = []
+        with concurrent.futures.ThreadPoolExecutor(max_workers=25) as executor:
+            future_to_source = {executor.submit(cb, item): item for item in collection}
+            for future in concurrent.futures.as_completed(future_to_source):
+                result = future.result()
+                results.append(result)
+        return results
+
+    def load_all_images(self, albums):
+        return self.do_concurrent(albums, self.load_image)
 
     def get_albums(self, library_section, start=None, days=7, length=9):
         start = date.fromisoformat(start) if start is not None else datetime.today()
@@ -103,14 +120,17 @@ class Plugin(BasePlugin):
             if album_id is None:
                 continue
             if album_id in albums:
-                albums[album_id] += 1
+                albums[album_id]["count"] += 1
             else:
-                albums[album_id] = 1
+                albums[album_id] = {"count": 1, "art": track.parentThumb}
 
         sorted_albums = sorted(
-            [{"id": id, "count": count} for id, count in albums.items()],
-            key=lambda album: albums[album["id"]],
+            [
+                {"id": id, "count": album["count"], "art": album["art"]}
+                for id, album in albums.items()
+            ],
+            key=lambda album: albums[album["id"]]["count"],
             reverse=True,
         )[0:length]
-        hydrated_albums = [section.fetchItem(x["id"]) for x in sorted_albums]
-        return hydrated_albums
+
+        return sorted_albums

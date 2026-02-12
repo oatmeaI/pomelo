@@ -80,11 +80,11 @@ class Plugin(BasePlugin):
             if start is not None:
                 args["viewedAt<"] = int(start.timestamp())
             key = f"/status/sessions/history/all?{urlencode(args)}"
-            print(hub_config["title"], key)
+            # print(hub_config["title"], key)
             ts = time()
             history = section.fetchItems(key)
             te = time()
-            print("hub:%r took: %2.4f sec" % (hub_config["title"], te - ts))
+            # print("hub:%r took: %2.4f sec" % (hub_config["title"], te - ts))
             albums = {}
             for track in history:
                 if start and track.viewedAt > start:
