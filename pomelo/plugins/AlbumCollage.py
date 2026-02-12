@@ -8,6 +8,8 @@ from pomelo.BasePlugin import BasePlugin
 from flask import Response
 from pomelo.config import Config
 
+# TODO: cache things somehow
+
 
 class Plugin(BasePlugin):
     PLUGIN_NAME = "AlbumCollage"
