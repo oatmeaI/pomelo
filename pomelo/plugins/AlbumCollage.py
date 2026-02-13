@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 import concurrent.futures
 import requests
 from PIL import Image, ImageFont, ImageDraw
@@ -9,6 +9,10 @@ from flask import Response
 from pomelo.config import Config
 
 # TODO: cache things somehow
+
+
+MAX_PIXELS = 2000
+MAX_DAYS = 365
 
 
 class Plugin(BasePlugin):
@@ -26,22 +30,26 @@ class Plugin(BasePlugin):
         background = request.args.get("background") or "FFFFFF"
 
         # days back from start to look for history
-        days = int(request.args.get("days") or 7)
+        days = max(int(request.args.get("days") or 7), 0)
 
         # rows in the collage
-        rows = int(request.args.get("rows") or 3)
+        rows = max(int(request.args.get("rows") or 3), 1)
 
         # columns in the collage
-        cols = int(request.args.get("cols") or 3)
+        cols = max(int(request.args.get("cols") or 3), 1)
 
         # spacing between album covers
-        spacing = int(request.args.get("spacing") or 0)
+        spacing = max(int(request.args.get("spacing") or 0), 0)
 
         # max square dimension for each album cover; the final image will be max_size * rows tall and max_size * cols wide
-        max_size = int(request.args.get("max_size") or 200)
+        max_size = max(int(request.args.get("max_size") or 200), 1)
 
         # library section to look at for history
-        library_section = request.args.get("library_section") or 1
+        library_section = int(request.args.get("library_section") or 1)
+        print(request.args)
+
+        if days > MAX_DAYS:
+            raise Exception("Too many days")
 
         albums = self.get_albums(library_section, start, days, rows * cols)
         self.load_all_images(albums)
@@ -62,6 +70,9 @@ class Plugin(BasePlugin):
         width = (size * cols) + (spacing * (cols + 1))
         height = (size * rows) + (spacing * (rows + 1))
 
+        if width > MAX_PIXELS or height > MAX_PIXELS:
+            raise Exception("Too big")
+
         collage = Image.new("RGB", (width, height), color=f"#{background}")
         draw = ImageDraw.Draw(collage)
         for i, album in enumerate(albums):
@@ -72,7 +83,18 @@ class Plugin(BasePlugin):
             x = (col * (size + spacing)) + spacing
             y = (row * (size + spacing)) + spacing
             collage.paste(img, (x, y))
-            # draw.text((x, y), f"{album['count']}", (255, 255, 255))
+            # draw.rectangle(
+            #     xy=(
+            #         x + (spacing / 2),
+            #         y + (spacing / 2),
+            #         x + (spacing / 2) + 20,
+            #         y + (spacing / 2) + 20,
+            #     ),
+            #     fill=(0, 0, 0),
+            #     outline=(0, 0, 0),
+            #     width=5,
+            # )
+            # draw.text((x + spacing, y + spacing), f"{album['count']}", (255, 255, 255))
 
         return collage
 
@@ -97,15 +119,15 @@ class Plugin(BasePlugin):
     def get_albums(self, library_section, start=None, days=7, length=9):
         start = date.fromisoformat(start) if start is not None else datetime.today()
 
-        start_date = datetime.combine(
-            start,
-            datetime.max.time(),
-        )
+        start_date = datetime.combine(start, datetime.max.time())
+        end_date = datetime.combine(start - timedelta(days=days), datetime.min.time())
 
-        end_date = datetime.combine(
-            start - timedelta(days=days),
-            datetime.min.time(),
-        )
+        # print(start_date)
+        # print(start_date.timestamp())
+        # print(start_date.tzname())
+        # print(end_date)
+        # print(end_date.timestamp())
+        # print(end_date.tzname())
 
         args = {
             "librarySectionID": library_section,

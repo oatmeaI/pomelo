@@ -35,7 +35,7 @@ def config():
     return json.dumps(Config.data)
 
 
-def init_routes(app, plugins):
+def init_routes(app, plugins, limiter):
     routes = {}
     for plugin in plugins:
         for k, v in plugin.paths().items():

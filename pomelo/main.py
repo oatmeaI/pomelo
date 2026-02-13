@@ -1,6 +1,10 @@
+import logging
+
 from waitress import serve
 from flask import Flask
-import logging
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask.logging import default_handler
 
 from pomelo.config import Config
 from pomelo.caddy import init_caddy
@@ -14,16 +18,31 @@ def init_app():
     return app
 
 
+def init_limiter(app):
+    limiter = Limiter(
+        get_remote_address,
+        app=app,
+        default_limits=["1/second"],
+        storage_uri="memory://",
+    )
+    limiter_logger = logging.getLogger("flask-limiter")
+    limiter_logger.setLevel(logging.DEBUG)
+    limiter_logger.addHandler(default_handler)
+
+    return limiter
+
+
 def boot():
     wizard_init()
 
     app = init_app()
+    limiter = init_limiter(app)
     plugins = init_plugins()
 
     if Config.use_caddy:
         init_caddy()
 
-    init_routes(app, plugins)
+    init_routes(app, plugins, limiter)
 
     wizard_app()
 
