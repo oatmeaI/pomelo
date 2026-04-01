@@ -22,7 +22,7 @@ def init_limiter(app):
     limiter = Limiter(
         get_remote_address,
         app=app,
-        default_limits=["1/second"],
+        default_limits=["10/second"],
         storage_uri="memory://",
     )
     limiter_logger = logging.getLogger("flask-limiter")
