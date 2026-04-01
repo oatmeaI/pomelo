@@ -37,7 +37,7 @@ class Plugin(BasePlugin):
         hub = {
             "title": hub_config["title"],
             "type": hub_config["type"],  # album, what else?
-            "hubIdentifier": hub_config["title"],
+            "hubIdentifier": getattr(hub_config, "key", hub_config["title"]),
             "context": hub_config["title"],
             "size": 0,
             "more": False,
@@ -80,47 +80,158 @@ class Plugin(BasePlugin):
             if start is not None:
                 args["viewedAt<"] = int(start.timestamp())
             key = f"/status/sessions/history/all?{urlencode(args)}"
-            print(hub_config["title"], key)
             ts = time()
             history = section.fetchItems(key)
             te = time()
             print("hub:%r took: %2.4f sec" % (hub_config["title"], te - ts))
-            albums = {}
-            for track in history:
-                if start and track.viewedAt > start:
-                    # print(start, track.viewedAt, end)
-                    # break
-                    continue
-                album_id = track.parentKey
-                if album_id is None:
-                    # unclear why this happens sometimes
-                    continue
-                if album_id in albums:
-                    albums[album_id] += 1
-                else:
-                    albums[album_id] = 1
-            # TODO: sort prop comes from hub config
-            sorted_albums = sorted(
-                [{"id": id, "count": count} for id, count in albums.items()],
-                key=lambda album: albums[album["id"]],
-                reverse=True,
-            )[0 : hub_config["hub_max_length"]]
-            if "sort" in hub_config and hub_config["sort"] == "asc":
-                sorted_albums.reverse()
-            hydrated_albums = [section.fetchItem(x["id"]) for x in sorted_albums]
-            items = [
-                {
-                    "ratingKey": album.ratingKey,
-                    "key": album.key,
-                    "thumb": album.thumb,
-                    "type": "album",
-                    "title": f"{album.title}",
-                    "parentKey": album.parentKey,
-                    "parentTitle": album.parentTitle,
-                }
-                for album in hydrated_albums
-            ]
-            return items
+            last = None
+            repeat = "repeat_plays" in hub_config and hub_config["repeat_plays"]
+            show_count = "show_count" in hub_config and hub_config["show_count"]
+
+            if hub_config["type"] == "album":
+                artists = {}
+                for track in history:
+                    # If repeat_plays is true, we don't count consecutive plays from the
+                    # same album (unless it's the same track on repeat)
+                    # This is so that we can get a more accurate view of which albums
+                    # you're REALLY into, vs a long album you listened to start to finish once
+                    if (
+                        last is not None
+                        and repeat
+                        and last.parentKey == track.parentKey
+                    ):
+                        continue
+                    if start and track.viewedAt > start:
+                        continue
+                    artist_id = track.parentKey
+                    if artist_id is None:
+                        # unclear why this happens sometimes
+                        continue
+                    if artist_id in artists:
+                        artists[artist_id] += 1
+                    else:
+                        artists[artist_id] = 1
+                    last = track
+
+                # TODO: sort prop comes from hub config
+                sorted_artists = sorted(
+                    [{"id": id, "count": count} for id, count in artists.items()],
+                    key=lambda album: artists[album["id"]],
+                    reverse=True,
+                )[0 : hub_config["hub_max_length"]]
+
+                if "sort" in hub_config and hub_config["sort"] == "asc":
+                    sorted_artists.reverse()
+
+                hydrated_artists = [section.fetchItem(x["id"]) for x in sorted_artists]
+                items = [
+                    {
+                        "ratingKey": album.ratingKey,
+                        "key": album.key,
+                        "thumb": album.thumb,
+                        "type": "album",
+                        "title": f"{album.title}",
+                        "parentKey": album.parentKey,
+                        "parentTitle": album.parentTitle,
+                    }
+                    for album in hydrated_artists
+                ]
+                return items
+            elif hub_config["type"] == "track":
+                tracks = {}
+                for track in history:
+                    if start and track.viewedAt > start:
+                        continue
+                    track_id = track.key
+                    if track_id is None or track_id == "":
+                        continue
+                    if track_id in tracks:
+                        tracks[track_id] += 1
+                    else:
+                        tracks[track_id] = 1
+
+                # TODO: sort prop comes from hub config
+                sorted_artists = sorted(
+                    [{"id": id, "count": count} for id, count in tracks.items()],
+                    key=lambda track: tracks[track["id"]],
+                    reverse=True,
+                )[0 : hub_config["hub_max_length"]]
+
+                if "sort" in hub_config and hub_config["sort"] == "asc":
+                    sorted_artists.reverse()
+
+                hydrated_artists = [section.fetchItem(x["id"]) for x in sorted_artists]
+
+                items = [
+                    {
+                        "ratingKey": getattr(track, "ratingKey", ""),
+                        "key": track.key,
+                        "thumb": track.thumb,
+                        "type": "track",
+                        "title": f"{track.title}",
+                        "parentKey": track.parentKey,
+                        "parentTitle": track.parentTitle,
+                        "grandparentKey": track.grandparentKey,
+                        "grandparentTitle": f"[{tracks[track.key]}] {track.grandparentTitle}"
+                        if show_count
+                        else track.grandparentTitle,
+                    }
+                    for track in hydrated_artists
+                ]
+                return items
+
+            elif hub_config["type"] == "artist":
+                artists = {}
+                for track in history:
+                    # If repeat_plays is true, we don't count consecutive plays from the
+                    # same album (unless it's the same track on repeat)
+                    # This is so that we can get a more accurate view of which albums
+                    # you're REALLY into, vs a long album you listened to start to finish once
+                    if (
+                        last is not None
+                        and repeat
+                        and last.parentKey == track.parentKey
+                    ):
+                        continue
+                    if start and track.viewedAt > start:
+                        continue
+                    artist_id = track.grandparentKey
+                    if artist_id is None:
+                        # unclear why this happens sometimes
+                        continue
+                    if artist_id in artists:
+                        artists[artist_id] += 1
+                    else:
+                        artists[artist_id] = 1
+                    last = track
+
+                # TODO: sort prop comes from hub config
+                sorted_artists = sorted(
+                    [{"id": id, "count": count} for id, count in artists.items()],
+                    key=lambda artist: artists[artist["id"]],
+                    reverse=True,
+                )[0 : hub_config["hub_max_length"]]
+
+                if "sort" in hub_config and hub_config["sort"] == "asc":
+                    sorted_artists.reverse()
+
+                hydrated_artists = [section.fetchItem(x["id"]) for x in sorted_artists]
+                items = [
+                    {
+                        "ratingKey": artist.ratingKey,
+                        "key": artist.key,
+                        "thumb": artist.thumb,
+                        "type": "artist",
+                        "title": f"[{artists[artist.key]}] {artist.title}"
+                        if show_count
+                        else artist.title,
+                        # "parentKey": artist.parentKey,
+                        # "parentTitle": artist.parentTitle,
+                    }
+                    for artist in hydrated_artists
+                ]
+                return items
+
         else:
             return []
 
