@@ -1,8 +1,7 @@
 import concurrent.futures
-import datetime
 import json
 
-from random import choices
+from random import choices, shuffle
 from rich.table import Table
 from rich.console import Console
 from plexapi.server import PlayQueue
@@ -206,6 +205,7 @@ class Plugin(BasePlugin):
                     source = future_to_source[future]
                     tracks = future.result()
                     self.console(f"Fetched {source["name"]}")
+                    # print(tracks)
                     source_name = source["name"]
                     pool[source_name] = {}
                     pool[source["name"]]["tracks"] = tracks
@@ -218,7 +218,8 @@ class Plugin(BasePlugin):
                         )
                         # If sort_weight is 2, the first track is 2x more likely than the last
                         weight = weight_factor
-                        factor = (weight - 1) / len(tracks)
+                        # print(source["name"], tracks)
+                        factor = (weight - 1) / (len(tracks) if len(tracks) > 0 else 1)
                         [key, dir] = source["weight"].split(":")
                         reverse = dir == "desc"
                         [obj, prop] = key.split(".")
@@ -241,32 +242,68 @@ class Plugin(BasePlugin):
 
             totals = {}
             rows = []
-            while len(tracks) < length:
-                source_name = choices(options, weights=option_weights, k=1)[0]
-                source = pool[source_name]
+            if "strict" in station and station["strict"]:
+                track_sources = {}
+                for source in sources:
+                    k = (source["chance"] / 100) * length
+                    i = 0
+                    source_pool = pool[source["name"]]
 
-                if len(source["tracks"]) < 1:
-                    self.console(f"Out of tracks for {source_name}, skipping...")
-                    for name, source in pool.items():
-                        if len(source["tracks"]) > 0:
-                            continue
-                    break
+                    # self.console(f"k: {k}")
+                    # self.console(f"length: {length}")
+                    # self.console(f"chance: {source["chance"]}")
+                    # self.console(len(source_pool["tracks"]))
+                    # self.console(len(source_pool["weights"]))
 
-                track = choices(source["tracks"], weights=source["weights"], k=1)[0]
+                    while i < k:
+                        track = choices(
+                            source_pool["tracks"], weights=source_pool["weights"], k=1
+                        )[0]
+                        if track not in tracks:
+                            i += 1
+                            tracks.append(track)
+                            track_sources[track.ratingKey] = source["name"]
+                            del source_pool["weights"][
+                                source_pool["tracks"].index(track)
+                            ]
+                            source_pool["tracks"].remove(track)
 
-                # Pick again if that track is already in the queue
-                while track in tracks:
+                    totals[source["name"]] = i
+
+                shuffle(tracks)
+                for track in tracks:
+                    rows.append(
+                        {"track": track, "source": track_sources[track.ratingKey]}
+                    )
+            else:
+                while len(tracks) < length:
+                    source_name = choices(options, weights=option_weights, k=1)[0]
+                    source = pool[source_name]
+
+                    if len(source["tracks"]) < 1:
+                        self.console(f"Out of tracks for {source_name}, skipping...")
+                        for name, source in pool.items():
+                            if len(source["tracks"]) > 0:
+                                continue
+                        break
+
                     track = choices(source["tracks"], weights=source["weights"], k=1)[0]
 
-                tracks.append(track)
+                    # Pick again if that track is already in the queue
+                    while track in tracks:
+                        track = choices(
+                            source["tracks"], weights=source["weights"], k=1
+                        )[0]
 
-                del source["weights"][source["tracks"].index(track)]
-                source["tracks"].remove(track)
+                    tracks.append(track)
 
-                totals[source_name] = (
-                    1 if source_name not in totals else totals[source_name] + 1
-                )
-                rows.append({"track": track, "source": source_name})
+                    del source["weights"][source["tracks"].index(track)]
+                    source["tracks"].remove(track)
+
+                    totals[source_name] = (
+                        1 if source_name not in totals else totals[source_name] + 1
+                    )
+                    rows.append({"track": track, "source": source_name})
 
             table = Table(title="Tracks", show_lines=True, width=55)
             table.add_column("Artist", style="cyan", justify="right")
